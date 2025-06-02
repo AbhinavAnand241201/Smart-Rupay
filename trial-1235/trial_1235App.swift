@@ -1,10 +1,3 @@
-//
-//  trial_1235App.swift
-//  trial-1235
-//
-//  Created by ABHINAV ANAND  on 02/06/25.
-//
-
 import SwiftUI
 
 @main
