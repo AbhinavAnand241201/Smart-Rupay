@@ -118,31 +118,39 @@ struct FinancialAdvisorOnboardingView: View {
     }
 }
 
-// MARK: - Custom TextField Style Component
+
+// Make sure this is the ONLY definition of CustomStyledTextField in your project.
 struct CustomStyledTextField: View {
     let placeholder: String
     @Binding var text: String
     var keyboardType: UIKeyboardType = .default
+    var isSecure: Bool = false // Added for password fields
 
-    private let inputFieldBackgroundColor = Color(red: 0.12, green: 0.13, blue: 0.15)
-    private let placeholderTextColor = Color(hex: "8A8A8E")
-    private let inputTextColor = Color.white
+    // Parameters for colors, with default values matching your previous themes if not provided
+    var backgroundColor: Color = Color(red: 0.12, green: 0.13, blue: 0.15)
+    var placeholderColor: Color = Color(hex: "8A8A8E") // Default from FinancialAdvisorOnboarding
+    var textColor: Color = Color.white                 // Default from FinancialAdvisorOnboarding
 
     var body: some View {
-        TextField("", text: $text, prompt: Text(placeholder).foregroundColor(placeholderTextColor))
-            .font(.system(size: 16, design: .rounded))
-            .keyboardType(keyboardType)
-            .foregroundColor(inputTextColor)
-            .padding(EdgeInsets(top: 16, leading: 18, bottom: 16, trailing: 18))
-            .background(inputFieldBackgroundColor)
-            .cornerRadius(12)
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.gray.opacity(0.3), lineWidth: 0.5) // Subtle border
-            )
+        Group {
+            if isSecure {
+                SecureField("", text: $text, prompt: Text(placeholder).foregroundColor(placeholderColor))
+            } else {
+                TextField("", text: $text, prompt: Text(placeholder).foregroundColor(placeholderColor))
+            }
+        }
+        .font(.system(size: 16, design: .rounded))
+        .keyboardType(keyboardType)
+        .foregroundColor(textColor) // Use the textColor parameter
+        .padding(EdgeInsets(top: 16, leading: 18, bottom: 16, trailing: 18))
+        .background(backgroundColor) // Use the backgroundColor parameter
+        .cornerRadius(12)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.gray.opacity(0.2), lineWidth: 0.5) // Subtle border, adjust if needed
+        )
     }
 }
-
 // MARK: - Preview
 struct FinancialAdvisorOnboardingView_Previews: PreviewProvider {
     static var previews: some View {
