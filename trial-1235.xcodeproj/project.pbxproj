@@ -10,9 +10,33 @@
 		1587AF4F2DECDF4900F2AA42 /* trial-1235.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "trial-1235.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		158F32272DF30CC900A4347E /* Exceptions for "trial-1235" folder in "trial-1235" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Extensions.swift,
+			);
+			target = 1587AF4E2DECDF4900F2AA42 /* trial-1235 */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		158F32282DF30CC900A4347E /* Exceptions for "trial-1235" folder in "Copy Bundle Resources" phase from "trial-1235" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = 1587AF4D2DECDF4900F2AA42 /* Resources */;
+			membershipExceptions = (
+				Extensions.swift,
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		1587AF512DECDF4900F2AA42 /* trial-1235 */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				158F32272DF30CC900A4347E /* Exceptions for "trial-1235" folder in "trial-1235" target */,
+				158F32282DF30CC900A4347E /* Exceptions for "trial-1235" folder in "Copy Bundle Resources" phase from "trial-1235" target */,
+			);
 			path = "trial-1235";
 			sourceTree = "<group>";
 		};

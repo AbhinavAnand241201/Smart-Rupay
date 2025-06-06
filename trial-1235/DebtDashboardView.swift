@@ -1,4 +1,6 @@
 // File: Views/DebtDashboardView.swift
+// CORRECTED: This file no longer assumes or needs a local color extension.
+// It relies on the global init(hex:) from your BudgetCategoryItem.swift file.
 
 import SwiftUI
 
@@ -11,22 +13,20 @@ struct DebtDashboardView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                Color.primaryBackground.ignoresSafeArea()
+                // CHANGED: Using direct hex color to match your project style
+                Color(hex: "#151618").ignoresSafeArea()
                 
                 List {
-                    // --- SECTION 1: PROJECTION ---
                     projectionSection
-                        .listRowBackground(Color.cardBackground)
+                        .listRowBackground(Color(hex: "#26292E")) // Card Background
                         .listRowSeparator(.hidden)
 
-                    // --- SECTION 2: STRATEGY & EXTRA PAYMENT ---
                     strategySection
-                        .listRowBackground(Color.cardBackground)
+                        .listRowBackground(Color(hex: "#26292E")) // Card Background
                         .listRowSeparator(.hidden)
 
-                    // --- SECTION 3: DEBTS LIST ---
                     debtsSection
-                        .listRowBackground(Color.cardBackground)
+                        .listRowBackground(Color(hex: "#26292E")) // Card Background
                 }
                 .listStyle(InsetGroupedListStyle())
                 .scrollContentBackground(.hidden)
@@ -51,11 +51,10 @@ struct DebtDashboardView: View {
                     viewModel.addDebt(debt)
                 }
             }
-            .accentColor(.primaryAccent)
+            // CHANGED: Using direct hex color
+            .accentColor(Color(hex: "#3AD7D5"))
         }
     }
-    
-    // --- SUBVIEWS for better organization ---
     
     private var projectionSection: some View {
         Section {
@@ -64,25 +63,25 @@ struct DebtDashboardView: View {
                 HStack {
                     Image(systemName: "calendar.badge.clock")
                         .font(.title2)
-                        .foregroundColor(.primaryAccent)
+                        .foregroundColor(Color(hex: "#3AD7D5")) // Primary Accent
                     Text("Projected Payoff Date")
                         .font(.headline)
-                        .foregroundColor(.textPrimary)
+                        .foregroundColor(.white) // Text Primary
                 }
                 Text(projection.date)
                     .font(.system(size: 28, weight: .bold, design: .rounded))
-                    .foregroundColor(.primaryAccent)
+                    .foregroundColor(Color(hex: "#3AD7D5")) // Primary Accent
                 
                 Text("You could save an estimated **\(projection.interestSaved)** in interest with this plan.")
                     .font(.footnote)
-                    .foregroundColor(.textSecondary)
+                    .foregroundColor(Color(hex: "#A0A0A0")) // Text Secondary
             }
             .padding(.vertical)
         }
     }
     
     private var strategySection: some View {
-        Section(header: Text("Your Strategy").foregroundColor(.textSecondary)) {
+        Section {
             Picker("Strategy", selection: $viewModel.strategy) {
                 ForEach(DebtViewModel.PayoffStrategy.allCases) { strategy in
                     Text(strategy.rawValue).tag(strategy)
@@ -92,33 +91,37 @@ struct DebtDashboardView: View {
             
             HStack {
                 Text("Extra Monthly Payment")
-                    .foregroundColor(.textPrimary)
+                    .foregroundColor(.white) // Text Primary
                 Spacer()
                 Text("₹")
-                    .foregroundColor(.textSecondary)
+                    .foregroundColor(Color(hex: "#A0A0A0")) // Text Secondary
                 TextField("Amount", text: $viewModel.monthlyExtraPaymentString)
                     .keyboardType(.decimalPad)
                     .frame(width: 100)
                     .multilineTextAlignment(.trailing)
-                    .foregroundColor(.primaryAccent)
+                    .foregroundColor(Color(hex: "#3AD7D5")) // Primary Accent
                     .bold()
             }
+        } header: {
+            Text("Your Strategy")
+                .foregroundColor(Color(hex: "#A0A0A0")) // Text Secondary
         }
     }
     
     private var debtsSection: some View {
-        Section(header: Text("Your Debts").foregroundColor(.textSecondary)) {
+        Section {
             ForEach(viewModel.sortedDebts) { debt in
                 let isTarget = debt.id == viewModel.sortedDebts.first?.id
                 DebtRowView(debt: debt, isTarget: isTarget)
                     .padding(.vertical, 8)
             }
             .onDelete(perform: viewModel.deleteDebt)
+        } header: {
+            Text("Your Debts")
+                .foregroundColor(Color(hex: "#A0A0A0")) // Text Secondary
         }
     }
 }
-
-// MARK: - Sub-views for the Dashboard
 
 struct DebtRowView: View {
     let debt: DebtItem
@@ -133,18 +136,18 @@ struct DebtRowView: View {
         HStack(spacing: 15) {
             Image(systemName: debt.debtType.icon)
                 .font(.title2)
-                .foregroundColor(.primaryAccent)
+                .foregroundColor(Color(hex: "#3AD7D5")) // Primary Accent
                 .frame(width: 30)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(debt.name)
                     .fontWeight(.bold)
-                    .foregroundColor(.textPrimary)
+                    .foregroundColor(.white) // Text Primary
                 Text("₹\(debt.remainingBalance, specifier: "%.0f") remaining")
                     .font(.subheadline)
-                    .foregroundColor(.textSecondary)
+                    .foregroundColor(Color(hex: "#A0A0A0")) // Text Secondary
                 ProgressView(value: progress > 0 ? progress : 0)
-                    .tint(.primaryAccent)
+                    .tint(Color(hex: "#3AD7D5")) // Primary Accent
             }
             
             Spacer()
@@ -153,15 +156,15 @@ struct DebtRowView: View {
                 Text("TARGET")
                     .font(.caption2)
                     .fontWeight(.black)
-                    .foregroundColor(.primaryBackground)
+                    .foregroundColor(Color(hex: "#151618")) // Primary Background
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
-                    .background(Color.primaryAccent)
+                    .background(Color(hex: "#3AD7D5")) // Primary Accent
                     .cornerRadius(12)
             }
         }
         .padding(10)
-        .background(isTarget ? Color.primaryAccent.opacity(0.1) : Color.clear)
+        .background(isTarget ? Color(hex: "#3AD7D5").opacity(0.1) : Color.clear)
         .cornerRadius(10)
     }
 }
@@ -172,20 +175,20 @@ struct StrategyInfoSheet: View {
     var body: some View {
         NavigationView {
             ZStack {
-                Color.primaryBackground.ignoresSafeArea()
+                Color(hex: "#151618").ignoresSafeArea() // Primary Background
                 ScrollView {
                     VStack(alignment: .leading, spacing: 20) {
                         VStack(alignment: .leading, spacing: 5) {
                             Text("Avalanche Method")
-                                .font(.title2).bold().foregroundColor(.primaryAccent)
+                                .font(.title2).bold().foregroundColor(Color(hex: "#3AD7D5")) // Primary Accent
                             Text("This method focuses on paying off your debts with the **highest interest rates** first. You make minimum payments on all debts, then put any extra money towards the one with the highest APR. This approach usually saves you the most money in interest over time.")
-                                .foregroundColor(.textPrimary)
+                                .foregroundColor(.white) // Text Primary
                         }
                         VStack(alignment: .leading, spacing: 5) {
                             Text("Snowball Method")
-                                .font(.title2).bold().foregroundColor(.primaryAccent)
+                                .font(.title2).bold().foregroundColor(Color(hex: "#3AD7D5")) // Primary Accent
                             Text("This method focuses on paying off your **smallest debts** first, regardless of interest rate. You make minimum payments on all debts, then put any extra money towards the smallest balance. This provides quick wins and can be more motivating.")
-                                .foregroundColor(.textPrimary)
+                                .foregroundColor(.white) // Text Primary
                         }
                     }
                     .padding()
@@ -194,7 +197,7 @@ struct StrategyInfoSheet: View {
             .navigationTitle("Payoff Strategies")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem { Button("Done") { dismiss() }.foregroundColor(.primaryAccent) }
+                ToolbarItem { Button("Done") { dismiss() }.accentColor(Color(hex: "#3AD7D5")) } // Primary Accent
             }
         }
     }

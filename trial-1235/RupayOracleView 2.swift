@@ -1,3 +1,6 @@
+// RupayOracleView 2.swift
+// Smart-Rupay App - Phase 2 UI Updates - Corrected
+
 //
 //  RupayOracleView 2.swift
 //  trial-1235

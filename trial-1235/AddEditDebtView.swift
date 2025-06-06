@@ -1,4 +1,6 @@
 // File: Views/AddEditDebtView.swift
+// CORRECTED: This file no longer assumes or needs a local color extension.
+// It relies on the global init(hex:) from your BudgetCategoryItem.swift file.
 
 import SwiftUI
 
@@ -15,9 +17,10 @@ struct AddEditDebtView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                Color.primaryBackground.ignoresSafeArea()
+                // CHANGED: Using direct hex color
+                Color(hex: "#151618").ignoresSafeArea()
                 Form {
-                    Section(header: Text("Debt Details").foregroundColor(.textSecondary)) {
+                    Section(header: Text("Debt Details").foregroundColor(Color(hex: "#A0A0A0"))) { // Text Secondary
                         TextField("Debt Name (e.g., HDFC Credit Card)", text: $name)
                         Picker("Debt Type", selection: $debtType) {
                             ForEach(DebtItem.DebtType.allCases) { type in
@@ -25,9 +28,9 @@ struct AddEditDebtView: View {
                             }
                         }
                     }
-                    .listRowBackground(Color.cardBackground)
+                    .listRowBackground(Color(hex: "#26292E")) // Card Background
                     
-                    Section(header: Text("Amounts").foregroundColor(.textSecondary)) {
+                    Section(header: Text("Amounts").foregroundColor(Color(hex: "#A0A0A0"))) { // Text Secondary
                         HStack {
                             Text("₹")
                             TextField("Remaining Balance", text: $totalAmount)
@@ -44,7 +47,7 @@ struct AddEditDebtView: View {
                                 .keyboardType(.decimalPad)
                         }
                     }
-                    .listRowBackground(Color.cardBackground)
+                    .listRowBackground(Color(hex: "#26292E")) // Card Background
                 }
                 .scrollContentBackground(.hidden)
             }
@@ -59,7 +62,8 @@ struct AddEditDebtView: View {
                         .bold()
                 }
             }
-            .accentColor(.primaryAccent)
+            // CHANGED: Using direct hex color
+            .accentColor(Color(hex: "#3AD7D5"))
         }
     }
     
@@ -71,7 +75,7 @@ struct AddEditDebtView: View {
             interestRate: Double(interestRate) ?? 0,
             minimumPayment: Double(minimumPayment) ?? 0,
             debtType: debtType,
-            originalBalance: Double(totalAmount) ?? 0 // Set original balance on creation
+            originalBalance: Double(totalAmount) ?? 0
         )
         onSave(debt)
         dismiss()

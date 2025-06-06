@@ -1,4 +1,6 @@
 // RupayOracleViewModel.swift
+// Smart-Rupay App - Full Corrected Version
+// RupayOracleViewModel.swift
 // Smart-Rupay App - Phase 2 Enhancements
 
 import SwiftUI

@@ -1,27 +1,40 @@
-// MARK: - Data Model for a single Debt
 // File: Models/DebtItem.swift
 
 import Foundation
+import SwiftUI
 
-struct DebtItem: Identifiable, Codable {
+struct DebtItem: Identifiable, Codable, Hashable {
     let id: UUID
     var name: String
     var remainingBalance: Double
     var interestRate: Double // Annual Percentage Rate (APR)
     var minimumPayment: Double
-    var debtType: DebtType = .other // For custom icons and grouping
+    var debtType: DebtType = .other
 
-    enum DebtType: String, Codable, CaseIterable {
+    var isPaidOff: Bool {
+        return remainingBalance <= 0
+    }
+    
+    var originalBalance: Double? // Optional: for progress tracking
+
+    enum DebtType: String, Codable, CaseIterable, Identifiable {
+        var id: String { self.rawValue }
         case creditCard = "Credit Card"
         case personalLoan = "Personal Loan"
         case autoLoan = "Auto Loan"
         case studentLoan = "Student Loan"
         case mortgage = "Mortgage"
         case other = "Other"
-    }
-
-    // A computed property to know when it's paid off
-    var isPaidOff: Bool {
-        return remainingBalance <= 0
+        
+        var icon: String {
+            switch self {
+            case .creditCard: "creditcard.fill"
+            case .personalLoan: "person.fill"
+            case .autoLoan: "car.fill"
+            case .studentLoan: "graduationcap.fill"
+            case .mortgage: "house.fill"
+            case .other: "dollarsign.circle.fill"
+            }
+        }
     }
 }

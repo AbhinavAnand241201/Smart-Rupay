@@ -187,3 +187,4 @@ struct FinancialGoalsListView_Previews: PreviewProvider {
             .environmentObject(FinancialGoalsViewModel()) // For previews if ViewModel is complex
     }
 }
+
