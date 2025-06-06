@@ -9,6 +9,8 @@ class RecurringPaymentsViewModel: ObservableObject {
     @Published var recurringPayments: [RecurringPayment] = []
     @Published var notificationAuthStatus: UNAuthorizationStatus = .notDetermined
 
+    
+    
     // Predefined visuals for new recurring payments
     let itemVisuals: [(icon: String, colorHex: String)] = [
         ("creditcard.fill", "007BFF"), ("house.fill", "39FF14"), ("phone.fill", "BF00FF"),
@@ -19,16 +21,51 @@ class RecurringPaymentsViewModel: ObservableObject {
     
     // Sample categories - replace with your app's actual category system
     let sampleCategories = ["Subscription", "Housing", "Utilities", "Loan", "Membership", "Bills", "Insurance", "Internet", "Entertainment"].sorted()
+    
+    
+    // MARK: - Data Persistence
+        private let paymentsSaveKey = "UserRecurringPayments"
 
-    init() {
-        loadSamplePayments() // Load initial data
-        checkNotificationPermission() // Check current permission status on init
-        // Schedule reminders when ViewModel initializes if permission is already granted
-        // This ensures reminders are set if the app was closed and reopened.
-        if notificationAuthStatus == .authorized {
-            scheduleInitialRemindersForAllActivePayments()
+        private func savePayments() {
+            do {
+                let data = try JSONEncoder().encode(recurringPayments)
+                UserDefaults.standard.set(data, forKey: paymentsSaveKey)
+            } catch {
+                print("Failed to save payments: \(error.localizedDescription)")
+            }
         }
-    }
+
+        private func loadPayments() {
+            guard let data = UserDefaults.standard.data(forKey: paymentsSaveKey) else {
+                self.recurringPayments = []
+                return
+            }
+            
+            do {
+                self.recurringPayments = try JSONDecoder().decode([RecurringPayment].self, from: data)
+            } catch {
+                print("Failed to load payments: \(error.localizedDescription)")
+                self.recurringPayments = []
+            }
+        }
+
+//    init() {
+//        loadSamplePayments() // Load initial data
+//        checkNotificationPermission() // Check current permission status on init
+//        // Schedule reminders when ViewModel initializes if permission is already granted
+//        // This ensures reminders are set if the app was closed and reopened.
+//        if notificationAuthStatus == .authorized {
+//            scheduleInitialRemindersForAllActivePayments()
+//        }
+//    }
+    // What to change
+        init() {
+            loadPayments() // Load saved data
+            checkNotificationPermission()
+            if notificationAuthStatus == .authorized {
+                scheduleInitialRemindersForAllActivePayments()
+            }
+        }
 
     // --- Notification Logic ---
     func checkNotificationPermission() {
@@ -80,7 +117,7 @@ class RecurringPaymentsViewModel: ObservableObject {
         if notificationAuthStatus == .authorized && !newPayment.isEnded && newPayment.nextDueDate >= Calendar.current.startOfDay(for: Date()){
             NotificationManager.shared.scheduleNotification(for: newPayment)
         }
-        // TODO: Persist changes
+        savePayments()
     }
 
     func updatePayment(_ paymentToUpdate: RecurringPayment) {
@@ -107,7 +144,7 @@ class RecurringPaymentsViewModel: ObservableObject {
             if notificationAuthStatus == .authorized && !updatedPayment.isEnded && updatedPayment.nextDueDate >= Calendar.current.startOfDay(for: Date()) {
                 NotificationManager.shared.scheduleNotification(for: updatedPayment) // Schedule new
             }
-            // TODO: Persist changes
+            savePayments()
         }
     }
     
@@ -150,14 +187,14 @@ class RecurringPaymentsViewModel: ObservableObject {
         if notificationAuthStatus == .authorized && !payment.isEnded && payment.nextDueDate >= Calendar.current.startOfDay(for: Date()) {
             NotificationManager.shared.scheduleNotification(for: payment)
         }
-        // TODO: Persist changes
+        savePayments()
     }
 
     func deletePayment(at offsets: IndexSet) {
         let paymentsToDelete = offsets.map { recurringPayments[$0] }
         paymentsToDelete.forEach { NotificationManager.shared.cancelNotification(for: $0) }
         recurringPayments.remove(atOffsets: offsets)
-        // TODO: Persist changes
+        savePayments()
     }
 
     private func sortPayments() {

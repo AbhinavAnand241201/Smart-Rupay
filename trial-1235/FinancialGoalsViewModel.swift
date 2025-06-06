@@ -25,11 +25,39 @@ class FinancialGoalsViewModel: ObservableObject {
         ("briefcase.fill", "3AD7D5") // Teal (App's main accent)
     ]
     private var nextVisualIndex = 0
+    // MARK: - Data Persistence
+        private let goalsSaveKey = "UserFinancialGoals"
 
-    init() {
-        // Load saved goals or add sample data
-        loadSampleGoals()
-    }
+        private func saveGoals() {
+            do {
+                let data = try JSONEncoder().encode(goals)
+                UserDefaults.standard.set(data, forKey: goalsSaveKey)
+            } catch {
+                print("Failed to save goals: \(error.localizedDescription)")
+            }
+        }
+
+        private func loadGoals() {
+            guard let data = UserDefaults.standard.data(forKey: goalsSaveKey) else {
+                self.goals = []
+                return
+            }
+            
+            do {
+                self.goals = try JSONDecoder().decode([FinancialGoal].self, from: data)
+            } catch {
+                print("Failed to load goals: \(error.localizedDescription)")
+                self.goals = []
+            }
+        }
+//    init() {
+//        // Load saved goals or add sample data
+//        loadSampleGoals()
+//    }
+    // What to change
+        init() {
+            loadGoals()
+        }
 
     func addGoal(name: String, targetAmount: Double, currentAmount: Double, deadline: Date?) {
         let visual = goalVisuals[nextVisualIndex % goalVisuals.count]
@@ -46,6 +74,7 @@ class FinancialGoalsViewModel: ObservableObject {
         goals.append(newGoal)
         // Sort goals, e.g., by deadline or completion status
         sortGoals()
+        saveGoals()
     }
 
     func updateGoalContribution(goalId: UUID, additionalAmount: Double) {
@@ -53,11 +82,14 @@ class FinancialGoalsViewModel: ObservableObject {
             goals[index].currentAmount += additionalAmount
             goals[index].currentAmount = min(goals[index].currentAmount, goals[index].targetAmount) // Cap at target
             // Persist changes if necessary
+            saveGoals()
         }
+        
     }
     
     func deleteGoal(at offsets: IndexSet) {
         goals.remove(atOffsets: offsets)
+        saveGoals()
         // Persist changes
     }
     
