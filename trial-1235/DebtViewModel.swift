@@ -47,13 +47,18 @@ class DebtViewModel: ObservableObject {
     }
     
     // Sample data for easy previewing
-    init() {
-        self.debtItems = [
-            DebtItem(id: UUID(), name: "ICICI Credit Card", remainingBalance: 45000, interestRate: 22.5, minimumPayment: 1800, debtType: .creditCard, originalBalance: 50000),
-            DebtItem(id: UUID(), name: "Car Loan", remainingBalance: 350000, interestRate: 8.2, minimumPayment: 12000, debtType: .autoLoan, originalBalance: 400000),
-            DebtItem(id: UUID(), name: "Personal Loan", remainingBalance: 80000, interestRate: 14.0, minimumPayment: 4500, debtType: .personalLoan, originalBalance: 100000)
-        ]
-    }
+//    init() {
+//        self.debtItems = [
+//            DebtItem(id: UUID(), name: "ICICI Credit Card", remainingBalance: 45000, interestRate: 22.5, minimumPayment: 1800, debtType: .creditCard, originalBalance: 50000),
+//            DebtItem(id: UUID(), name: "Car Loan", remainingBalance: 350000, interestRate: 8.2, minimumPayment: 12000, debtType: .autoLoan, originalBalance: 400000),
+//            DebtItem(id: UUID(), name: "Personal Loan", remainingBalance: 80000, interestRate: 14.0, minimumPayment: 4500, debtType: .personalLoan, originalBalance: 100000)
+//        ]
+//    }
+    
+    // What to change
+        init() {
+            loadDebts()
+        }
 
     var monthlyExtraPayment: Double {
         Double(monthlyExtraPaymentString) ?? 0.0
@@ -79,16 +84,19 @@ class DebtViewModel: ObservableObject {
 
     func addDebt(_ debt: DebtItem) {
         debtItems.append(debt)
+        saveDebts()
     }
 
     func updateDebt(_ debt: DebtItem) {
         if let index = debtItems.firstIndex(where: { $0.id == debt.id }) {
             debtItems[index] = debt
+            saveDebts()
         }
     }
     
     func deleteDebt(at offsets: IndexSet) {
         debtItems.remove(atOffsets: offsets)
+        saveDebts()
     }
     
     // Powerful payoff projection logic
