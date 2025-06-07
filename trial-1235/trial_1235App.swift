@@ -1,19 +1,35 @@
-//
-//  trial_1235App.swift
-//
 import SwiftUI
 
 @main
 struct trial_1235App: App {
-    // Create the store here. It will stay alive for the entire app session.
-    @StateObject private var transactionStore = TransactionStore()
+    // FIXED: Observe the shared AppState to react to login changes.
+    @StateObject private var appState = AppState.shared
     
+    // FIXED: All data stores are now initialized here and passed via environment
+    // to ensure all parts of the app use the SAME data.
+    @StateObject private var transactionStore = TransactionStore()
+    @StateObject private var financialGoalsViewModel = FinancialGoalsViewModel()
+    @StateObject private var debtViewModel = DebtViewModel()
+    @StateObject private var recurringPaymentsViewModel = RecurringPaymentsViewModel()
+    @StateObject private var billManager = BillManager()
+    @StateObject private var rupayOracleViewModel = RupayOracleViewModel()
+
     var body: some Scene {
         WindowGroup {
-            // We inject the store into the environment of our root view.
-            // Any child view can now access it.
-            LoginScreenView() // Or your main tab view if login is not implemented
-                .environmentObject(transactionStore)
+            // FIXED: This logic now correctly shows the LoginView first,
+            // and switches to the main app when isLoggedIn becomes true.
+            if appState.isLoggedIn {
+                // Using MainAppView as the primary, most complete tab view.
+                MainAppView()
+                    .environmentObject(transactionStore)
+                    .environmentObject(financialGoalsViewModel)
+                    .environmentObject(debtViewModel)
+                    .environmentObject(recurringPaymentsViewModel)
+                    .environmentObject(billManager)
+                    .environmentObject(rupayOracleViewModel)
+            } else {
+                LoginScreenView()
+            }
         }
     }
 }

@@ -147,13 +147,18 @@ class RupayOracleViewModel: ObservableObject {
         oracleTip = potentialTips.randomElement() ?? "Rupay Oracle is analyzing your data. Check back soon for fresh insights!"
     }
     
+    // In RupayOracleViewModel.swift
+
     static func generateSampleTransactions() -> [TransactionDetail] {
-        let calendar = Calendar.current; let today = Date()
+        let calendar = Calendar.current
+        let today = Date()
+        
+        // FIXED: All initializers now correctly use `id: UUID()`, `iconBackgroundColorHex`, and pass a String hex value.
         return [
-            TransactionDetail(date: calendar.date(byAdding: .day, value: -2, to: today)!, iconName: "cart.fill", iconBackgroundColor: .gray, name: "Groceries A", category: "Groceries", amount: -70.0),
-            TransactionDetail(date: calendar.date(byAdding: .day, value: -5, to: today)!, iconName: "fork.knife", iconBackgroundColor: .orange, name: "Restaurant B", category: "Dining Out", amount: -45.0),
-            TransactionDetail(date: calendar.date(byAdding: .day, value: -10, to: today)!, iconName: "bolt.fill", iconBackgroundColor: .yellow, name: "Electricity Bill", category: "Utilities", amount: -80.0),
-            TransactionDetail(date: calendar.date(byAdding: .day, value: -25, to: today)!, iconName: "dollarsign.circle.fill", iconBackgroundColor: .green, name: "Salary", category: "Income", amount: 2500.0),
+            TransactionDetail(id: UUID(), date: calendar.date(byAdding: .day, value: -2, to: today)!, iconName: "cart.fill", iconBackgroundColorHex: "#8E8E93", name: "Groceries A", category: "Groceries", amount: -70.0),
+            TransactionDetail(id: UUID(), date: calendar.date(byAdding: .day, value: -5, to: today)!, iconName: "fork.knife", iconBackgroundColorHex: "#FF9500", name: "Restaurant B", category: "Dining Out", amount: -45.0),
+            TransactionDetail(id: UUID(), date: calendar.date(byAdding: .day, value: -10, to: today)!, iconName: "bolt.fill", iconBackgroundColorHex: "#FFCC00", name: "Electricity Bill", category: "Utilities", amount: -80.0),
+            TransactionDetail(id: UUID(), date: calendar.date(byAdding: .day, value: -25, to: today)!, iconName: "dollarsign.circle.fill", iconBackgroundColorHex: "#34C759", name: "Salary", category: "Income", amount: 2500.0)
         ]
     }
     static func generateSampleBudgets(colors: [Color]) -> [BudgetStatusItem] {

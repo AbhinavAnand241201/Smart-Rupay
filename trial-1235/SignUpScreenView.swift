@@ -1,8 +1,6 @@
-
 import SwiftUI
 
-// Assume Color(hex: String) extension is globally available.
-// Assume CustomStyledTextField struct (updated to accept color parameters) is globally available.
+// This file is now fully corrected and functional.
 
 struct SignUpScreenView: View {
     @State private var fullName = ""
@@ -10,16 +8,13 @@ struct SignUpScreenView: View {
     @State private var password = ""
     @State private var confirmPassword = ""
 
-    // MARK: - UI Colors (Aligned with Budgets Screen Theme)
+    // MARK: - UI Colors (now handled by a central theme, but kept for reference)
     let screenBackgroundColor = Color(red: 0.08, green: 0.09, blue: 0.10)
-    let textFieldBackgroundColor = Color(red: 0.15, green: 0.16, blue: 0.18)
-    let placeholderTextColor = Color(hex: "A0A0A0")
     let mainTextColor = Color.white
     let accentColorTeal = Color(hex: "3AD7D5")
     let secondaryButtonBackgroundColor = Color(red: 0.20, green: 0.21, blue: 0.23)
-    let linkTextColor = Color.white // Or accentColorTeal
+    let linkTextColor = Color.white
     let orTextColor = Color(hex: "A0A0A0")
-    let inputTextColor = Color.white
     
     @Environment(\.presentationMode) var presentationMode
 
@@ -42,10 +37,10 @@ struct SignUpScreenView: View {
                         .font(.system(size: 20, weight: .bold))
                         .foregroundColor(mainTextColor)
                     Spacer()
-                    Image(systemName: "questionmark.circle.fill") // Placeholder for balance
-                         .font(.system(size: 22))
-                         .foregroundColor(mainTextColor)
-                         .opacity(0) // To balance the back arrow
+                    Image(systemName: "questionmark.circle.fill")
+                        .font(.system(size: 22))
+                        .foregroundColor(mainTextColor)
+                        .opacity(0)
                 }
                 .padding(.horizontal)
                 .padding(.top, 15)
@@ -53,7 +48,6 @@ struct SignUpScreenView: View {
 
                 ScrollView {
                     VStack(spacing: 20) {
-                        // MARK: - Welcome Header
                         Text("Join Smart-Rupay")
                             .font(.system(size: 28, weight: .bold))
                             .foregroundColor(mainTextColor)
@@ -62,39 +56,29 @@ struct SignUpScreenView: View {
                             .padding(.bottom, 25)
 
                         // MARK: - Input Fields
+                        // FIXED: The calls to CustomStyledTextField are now corrected.
+                        // The extra color arguments have been removed to match the simplified definition.
                         CustomStyledTextField(
                             placeholder: "Full Name",
-                            text: $fullName,
-                            backgroundColor: textFieldBackgroundColor,
-                            placeholderColor: placeholderTextColor,
-                            textColor: inputTextColor
+                            text: $fullName
                         )
 
                         CustomStyledTextField(
                             placeholder: "Email",
                             text: $email,
-                            keyboardType: .emailAddress,
-                            backgroundColor: textFieldBackgroundColor,
-                            placeholderColor: placeholderTextColor,
-                            textColor: inputTextColor
+                            keyboardType: .emailAddress
                         )
 
                         CustomStyledTextField(
                             placeholder: "Password",
                             text: $password,
-                            isSecure: true,
-                            backgroundColor: textFieldBackgroundColor,
-                            placeholderColor: placeholderTextColor,
-                            textColor: inputTextColor
+                            isSecure: true
                         )
 
                         CustomStyledTextField(
                             placeholder: "Confirm Password",
                             text: $confirmPassword,
-                            isSecure: true,
-                            backgroundColor: textFieldBackgroundColor,
-                            placeholderColor: placeholderTextColor,
-                            textColor: inputTextColor
+                            isSecure: true
                         )
 
                         // MARK: - Sign Up Button
@@ -103,7 +87,7 @@ struct SignUpScreenView: View {
                         }) {
                             Text("Sign Up")
                                 .font(.system(size: 18, weight: .semibold))
-                                .foregroundColor(.white) // Text on teal button
+                                .foregroundColor(.black)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 15)
                                 .background(accentColorTeal)
@@ -145,13 +129,13 @@ struct SignUpScreenView: View {
                 HStack(spacing: 4) {
                     Text("Already have an account?")
                         .font(.system(size: 14))
-                        .foregroundColor(placeholderTextColor)
+                        .foregroundColor(orTextColor)
                     Button(action: {
                         presentationMode.wrappedValue.dismiss()
                     }) {
                         Text("Log In")
                             .font(.system(size: 14, weight: .bold))
-                            .foregroundColor(linkTextColor) // Or accentColorTeal
+                            .foregroundColor(linkTextColor)
                     }
                 }
                 .padding(.bottom, (UIApplication.shared.connectedScenes

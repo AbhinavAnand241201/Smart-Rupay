@@ -143,39 +143,6 @@ struct FinancialAdvisorOnboardingView: View {
     }
 }
 
-// CustomStyledTextField (No changes needed)
-struct CustomStyledTextField: View {
-    let placeholder: String
-    @Binding var text: String
-    var keyboardType: UIKeyboardType = .default
-    var isSecure: Bool = false
-
-    var backgroundColor: Color = Color(red: 0.12, green: 0.13, blue: 0.15)
-    var placeholderColor: Color = Color(hex: "8A8A8E")
-    var textColor: Color = Color.white
-
-    var body: some View {
-        Group {
-            if isSecure {
-                SecureField("", text: $text, prompt: Text(placeholder).foregroundColor(placeholderColor))
-            } else {
-                TextField("", text: $text, prompt: Text(placeholder).foregroundColor(placeholderColor))
-            }
-        }
-        .font(.system(size: 16, design: .rounded))
-        .keyboardType(keyboardType)
-        .foregroundColor(textColor)
-        .padding(EdgeInsets(top: 16, leading: 18, bottom: 16, trailing: 18))
-        .background(backgroundColor)
-        .cornerRadius(12)
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.gray.opacity(0.2), lineWidth: 0.5)
-        )
-    }
-}
-
-
 // MARK: - Preview
 struct FinancialAdvisorOnboardingView_Previews: PreviewProvider {
     static var previews: some View {
