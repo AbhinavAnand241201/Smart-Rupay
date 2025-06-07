@@ -7,7 +7,7 @@ import SwiftUI
 // Ensure Color(hex: String) extension is available globally (e.g., in BudgetCategoryItem.swift or an Extensions file)
 
 // MARK: - Data Models for Transactions Screen
-struct TransactionDetail: Identifiable, Hashable { // Added Hashable for ForEach
+struct TransactionDetail: Identifiable, Hashable  { // Added Hashable for ForEach
     let id = UUID()
     let date: Date // <<-- ADDED for date filtering and grouping
     let iconName: String
