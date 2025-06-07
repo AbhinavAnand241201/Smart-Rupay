@@ -1,25 +1,25 @@
-
+//
 //  FinancialAdvisorOnboardingView.swift
 //  trial-1235
 //
 //  Created by ABHINAV ANAND  on 02/06/25.
 //
-//  MODIFIED by Gemini AI on 07/06/25 to be fully functional.
+//  MODIFIED by Gemini AI on 07/06/25 for safe, educational plan generation.
 //
 
 import SwiftUI
 
 struct FinancialAdvisorOnboardingView: View {
-    // Original State Variables
     @State private var monthlyIncome: String = ""
     @State private var monthlyExpenses: String = ""
     @State private var financialGoals: String = ""
     
-    // --- START: ADDED STATE VARIABLES ---
+    // State variables for the feature
     @State private var isLoading: Bool = false
-    @State private var showResponseSheet: Bool = false
-    @State private var oracleResponse: OracleResponse?
-    // --- END: ADDED STATE VARIABLES ---
+    @State private var showPlanSheet: Bool = false
+    @State private var financialPlan: FinancialPlan?
+    @State private var showAlert = false
+    @State private var alertMessage = ""
 
     // MARK: - UI Colors & Styles
     let backgroundColor = Color(red: 0.07, green: 0.08, blue: 0.09)
@@ -36,43 +36,35 @@ struct FinancialAdvisorOnboardingView: View {
                 VStack(alignment: .center, spacing: 20) {
                     Spacer(minLength: 40)
 
-                    // MARK: - Header
-                    Text("AI Financial Advisor")
+                    Text("AI Financial Planner")
                         .font(.system(size: 30, weight: .bold, design: .rounded))
                         .foregroundColor(buttonAndTitleAccentColor)
                         .padding(.bottom, 5)
 
-                    Text("To give you the best advice, we need to understand your financial situation and goals.")
+                    Text("Get an educational plan based on established financial frameworks.")
                         .font(.system(size: 16, weight: .regular, design: .rounded))
                         .foregroundColor(subtitleTextColor)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 30)
                         .padding(.bottom, 30)
 
-                    // MARK: - Input Fields
-                    CustomStyledTextField(placeholder: "What's your monthly income?", text: $monthlyIncome, keyboardType: .decimalPad)
-                    CustomStyledTextField(placeholder: "What are your monthly expenses?", text: $monthlyExpenses, keyboardType: .decimalPad)
-
-                    CustomStyledTextField(placeholder: "What are your financial goals? (e.g., buy a car, save for vacation)", text: $financialGoals)
+                    CustomStyledTextField(placeholder: "Your Monthly Income", text: $monthlyIncome, keyboardType: .decimalPad)
+                    CustomStyledTextField(placeholder: "Your Monthly Expenses", text: $monthlyExpenses, keyboardType: .decimalPad)
+                    CustomStyledTextField(placeholder: "Your Main Financial Goal (e.g., Buy a car)", text: $financialGoals)
                         .lineLimit(3)
 
                     Spacer()
-
                 }
                 .padding(.horizontal, 20)
             }
             
             VStack {
                 Spacer()
-                // --- START: MODIFIED NEXT BUTTON ---
-                Button(action: {
-                    getFinancialAdvice()
-                }) {
+                Button(action: generateFinancialPlan) {
                     if isLoading {
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: .black))
+                        ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .black))
                     } else {
-                        Text("Get My Plan")
+                        Text("Generate My Plan")
                             .font(.system(size: 18, weight: .semibold, design: .rounded))
                             .foregroundColor(.black)
                     }
@@ -81,8 +73,7 @@ struct FinancialAdvisorOnboardingView: View {
                 .padding(.vertical, 16)
                 .background(buttonAndTitleAccentColor)
                 .cornerRadius(14)
-                .disabled(isLoading) // Disable button while loading
-                // --- END: MODIFIED NEXT BUTTON ---
+                .disabled(isLoading)
                 .padding(.horizontal, 25)
                 .padding(.bottom, (UIApplication.shared.connectedScenes
                                     .compactMap { $0 as? UIWindowScene }
@@ -90,52 +81,96 @@ struct FinancialAdvisorOnboardingView: View {
             }
             .ignoresSafeArea(.keyboard, edges: .bottom)
         }
-        // --- START: ADDED SHEET MODIFIER ---
-        .sheet(isPresented: $showResponseSheet) {
-            if let response = oracleResponse {
-                OracleResponseView(response: response) {
-                    showResponseSheet = false
+        .sheet(isPresented: $showPlanSheet) {
+            if let plan = financialPlan {
+                FinancialPlanView(plan: plan) {
+                    showPlanSheet = false
                 }
             }
         }
-        // --- END: ADDED SHEET MODIFIER ---
+        .alert(isPresented: $showAlert) {
+            Alert(title: Text("Invalid Input"), message: Text(alertMessage), dismissButton: .default(Text("OK")))
+        }
         .preferredColorScheme(.dark)
         .onTapGesture {
             UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
         }
     }
     
-    // --- START: ADDED METHOD ---
-    private func getFinancialAdvice() {
-        // In a real app, this is where you would make a network call to your backend.
-        // NEVER call a Google AI API directly from the client-side app with your API key.
+    private func generateFinancialPlan() {
+        guard let income = Double(monthlyIncome), income > 0 else {
+            alertMessage = "Please enter a valid monthly income."
+            showAlert = true
+            return
+        }
         
+        guard let expenses = Double(monthlyExpenses), expenses >= 0 else {
+            alertMessage = "Please enter a valid number for monthly expenses."
+            showAlert = true
+            return
+        }
+
         isLoading = true
         
-        // This simulates a network delay of 2 seconds.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-            // This is placeholder data. It is NOT real financial advice.
-            self.oracleResponse = OracleResponse(
-                summary: "Based on your income and goals, your primary focus should be building an emergency fund while aggressively paying down high-interest debt. Once that's stable, you can start investing for your long-term goals.",
-                actionSteps: [
-                    .init(iconName: "shield.lefthalf.filled", title: "Build Emergency Fund", description: "Aim to save 3-6 months of essential expenses in a high-yield savings account.", iconColor: .blue),
-                    .init(iconName: "creditcard.and.123", title: "Tackle High-Interest Debt", description: "Prioritize paying off any debt with an interest rate above 7% to save money.", iconColor: .orange),
-                    .init(iconName: "chart.pie.fill", title: "Automate Your Savings", description: "Set up automatic monthly transfers to your savings and investment accounts.", iconColor: .green)
-                ],
-                investmentIdeas: [
-                    .init(type: "For Beginners (Lower Risk)", description: "Focus on diversified, low-cost funds to start building your portfolio.", ideas: ["Broad Market Index Funds (e.g., S&P 500)", "Target-Date Funds for retirement"]),
-                    .init(type: "For Growth (Higher Risk)", description: "As your comfort grows, consider adding exposure to specific sectors you believe in.", ideas: ["Technology Sector ETFs", "Healthcare Innovation Funds"])
+        // This is where all the "AI" logic happens safely on the device.
+        // No network call is needed for this safe version.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            
+            // 1. Emergency Fund Calculation
+            let emergencyTarget = expenses * 3
+            let emergencyPlan = PlanSection(
+                title: "Emergency Fund",
+                iconName: "shield.lefthalf.filled",
+                summary: "This is a safety net for unexpected events. A common goal is to have 3-6 months of expenses saved.",
+                steps: [
+                    String(format: "Your 3-month target is ₹%.2f.", emergencyTarget),
+                    "Open a separate High-Yield Savings Account for this.",
+                    "Automate a portion of your savings to this fund."
                 ]
             )
             
-            self.isLoading = false
-            self.showResponseSheet = true
+            // 2. Budget Allocation using 50/30/20 Rule
+            let needs = income * 0.50
+            let wants = income * 0.30
+            let savings = income * 0.20
+            
+            let budgetPlan = BudgetPlanSection(
+                title: "Budget Allocation",
+                iconName: "chart.pie.fill",
+                summary: "The 50/30/20 rule is a popular framework for managing money. It divides your after-tax income into three categories.",
+                allocations: [
+                    .init(category: "Needs", percentage: 0.5, amount: needs, color: .blue),
+                    .init(category: "Wants", percentage: 0.3, amount: wants, color: .orange),
+                    .init(category: "Savings", percentage: 0.2, amount: savings, color: .green)
+                ]
+            )
+            
+            // 3. Long-Term Goal Suggestion
+            let goalText = financialGoals.isEmpty ? "your future" : financialGoals
+            let goalPlan = PlanSection(
+                title: "Long-Term Goals",
+                iconName: "flag.fill",
+                summary: "Your savings from the 50/30/20 plan can be used to invest towards your long-term goals like '\(goalText)'.",
+                steps: [
+                    "Define a target amount and timeline for your goal.",
+                    "Research low-cost, diversified investment options.",
+                    "Consider setting up automated investments (SIPs)."
+                ]
+            )
+            
+            self.financialPlan = FinancialPlan(
+                emergencyFundPlan: emergencyPlan,
+                budgetAllocationPlan: budgetPlan,
+                longTermGoalSuggestion: goalPlan
+            )
+            
+            isLoading = false
+            showPlanSheet = true
         }
     }
-    // --- END: ADDED METHOD ---
 }
 
-// CustomStyledTextField (No changes needed, assumed to be available)
+// CustomStyledTextField (No changes needed)
 struct CustomStyledTextField: View {
     let placeholder: String
     @Binding var text: String
@@ -166,6 +201,7 @@ struct CustomStyledTextField: View {
         )
     }
 }
+
 
 // MARK: - Preview
 struct FinancialAdvisorOnboardingView_Previews: PreviewProvider {
