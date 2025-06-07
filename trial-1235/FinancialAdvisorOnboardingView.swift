@@ -97,6 +97,7 @@ struct FinancialAdvisorOnboardingView: View {
         }
     }
     
+    @MainActor
     private func generateFinancialPlan() {
         guard let income = Double(monthlyIncome), income > 0 else {
             alertMessage = "Please enter a valid monthly income."
@@ -109,63 +110,35 @@ struct FinancialAdvisorOnboardingView: View {
             showAlert = true
             return
         }
-
+        
         isLoading = true
         
-        // This is where all the "AI" logic happens safely on the device.
-        // No network call is needed for this safe version.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            
-            // 1. Emergency Fund Calculation
-            let emergencyTarget = expenses * 3
-            let emergencyPlan = PlanSection(
-                title: "Emergency Fund",
-                iconName: "shield.lefthalf.filled",
-                summary: "This is a safety net for unexpected events. A common goal is to have 3-6 months of expenses saved.",
-                steps: [
-                    String(format: "Your 3-month target is ₹%.2f.", emergencyTarget),
-                    "Open a separate High-Yield Savings Account for this.",
-                    "Automate a portion of your savings to this fund."
-                ]
-            )
-            
-            // 2. Budget Allocation using 50/30/20 Rule
-            let needs = income * 0.50
-            let wants = income * 0.30
-            let savings = income * 0.20
-            
-            let budgetPlan = BudgetPlanSection(
-                title: "Budget Allocation",
-                iconName: "chart.pie.fill",
-                summary: "The 50/30/20 rule is a popular framework for managing money. It divides your after-tax income into three categories.",
-                allocations: [
-                    .init(category: "Needs", percentage: 0.5, amount: needs, color: .blue),
-                    .init(category: "Wants", percentage: 0.3, amount: wants, color: .orange),
-                    .init(category: "Savings", percentage: 0.2, amount: savings, color: .green)
-                ]
-            )
-            
-            // 3. Long-Term Goal Suggestion
-            let goalText = financialGoals.isEmpty ? "your future" : financialGoals
-            let goalPlan = PlanSection(
-                title: "Long-Term Goals",
-                iconName: "flag.fill",
-                summary: "Your savings from the 50/30/20 plan can be used to invest towards your long-term goals like '\(goalText)'.",
-                steps: [
-                    "Define a target amount and timeline for your goal.",
-                    "Research low-cost, diversified investment options.",
-                    "Consider setting up automated investments (SIPs)."
-                ]
-            )
-            
-            self.financialPlan = FinancialPlan(
-                emergencyFundPlan: emergencyPlan,
-                budgetAllocationPlan: budgetPlan,
-                longTermGoalSuggestion: goalPlan
-            )
-            
-            isLoading = false
-            showPlanSheet = true
+        Task {
+            do {
+                // Call the network service to generate the financial plan
+                let plan = try await NetworkService.shared.generateFinancialPlan(
+                    monthlyIncome: income,
+                    monthlyExpenses: expenses,
+                    financialGoals: financialGoals
+                )
+                
+                // Update the UI on the main thread
+                self.financialPlan = plan
+                self.showPlanSheet = true
+                self.isLoading = false
+                
+            } catch let error as NetworkError {
+                // Handle network errors
+                alertMessage = error.localizedDescription
+                showAlert = true
+                isLoading = false
+                
+            } catch {
+                // Handle any other errors
+                alertMessage = "An unexpected error occurred. Please try again."
+                showAlert = true
+                isLoading = false
+            }
         }
     }
 }
