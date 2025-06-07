@@ -58,3 +58,4 @@ struct BudgetAllocation: Identifiable, Decodable {
         case category, percentage, amount, colorHex = "color"
     }
 }
+
