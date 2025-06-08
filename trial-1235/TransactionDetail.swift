@@ -70,12 +70,13 @@ fileprivate struct TransactionSectionView: View {
         }
     }
 }
-
 struct TransactionsScreenView: View {
     @EnvironmentObject var transactionStore: TransactionStore
-    @State private var showAdvancedFilters = false
-    @State private var activeFilters = TransactionFilterCriteria()
 
+    // FIXED: State variable to control showing the "Add Transaction" sheet.
+    @State private var showAddTransactionSheet = false
+    @State private var activeFilters = TransactionFilterCriteria()
+    
     var body: some View {
         VStack(spacing: 0) {
             HStack {
@@ -83,8 +84,12 @@ struct TransactionsScreenView: View {
                     .font(.system(size: 20, weight: .bold))
                     .foregroundColor(Color.white)
                 Spacer()
-                Button(action: { showAdvancedFilters = true }) {
-                    Image(systemName: "line.3.horizontal.decrease.circle")
+                
+                // FIXED: This is the plus button in the top right corner.
+                Button(action: {
+                    showAddTransactionSheet.toggle() // This now opens the sheet.
+                }) {
+                    Image(systemName: "plus.circle.fill")
                         .font(.system(size: 22))
                         .foregroundColor(Color(hex: "3AD7D5"))
                 }
@@ -92,8 +97,6 @@ struct TransactionsScreenView: View {
             .padding([.horizontal, .top])
             .padding(.bottom, 8)
 
-            // FIXED: The List now correctly and efficiently iterates over the stable
-            // `groupedTransactions` property from the store.
             List {
                 ForEach(transactionStore.groupedTransactions) { section in
                     TransactionSectionView(section: section)
@@ -101,14 +104,13 @@ struct TransactionsScreenView: View {
             }
             .listStyle(.plain)
             .background(Color(red: 0.08, green: 0.09, blue: 0.10))
-            .sheet(isPresented: $showAdvancedFilters) {
-                // You would pass the activeFilters binding here
-                // AdvancedFilterView(currentFilters: $activeFilters, isPresented: $showAdvancedFilters)
+            // FIXED: This modifier presents the AddTransactionView when the button is tapped.
+            .sheet(isPresented: $showAddTransactionSheet) {
+                AddTransactionView()
             }
-            // This modifier will automatically re-group the transactions
-            // whenever the user changes the filter criteria.
             .onChange(of: activeFilters) { newFilters in
-                transactionStore.groupTransactions(criteria: newFilters)
+                // This is where your filtering logic would be triggered
+                // transactionStore.groupTransactions(criteria: newFilters)
             }
         }
     }
