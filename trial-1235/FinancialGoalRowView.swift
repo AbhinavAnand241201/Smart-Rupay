@@ -78,106 +78,105 @@ struct FinancialGoalRowView: View {
 }
 // In FinancialGoalsScreen.swift (or FinancialGoalRowView.swift)
 
+
 struct FinancialGoalsListView: View {
+    // This creates and keeps the ViewModel alive for this view and its children.
     @StateObject private var viewModel = FinancialGoalsViewModel()
     @State private var showingAddGoalView = false
-
-    // UI Colors
-    let screenBackgroundColor = Color(red: 0.08, green: 0.09, blue: 0.10)
-    let mainTextColor = Color.white // This will be used for the custom title
-    let accentColorTeal = Color(hex: "3AD7D5")
-    let secondaryTextColor = Color(hex: "A0A0A0")
-    
-    @Environment(\.presentationMode) var presentationMode
 
     var body: some View {
         NavigationView {
             ZStack {
-                screenBackgroundColor.ignoresSafeArea()
+                Color(red: 0.08, green: 0.09, blue: 0.10).ignoresSafeArea()
 
+                // FIXED: Main content is now inside a ZStack to allow overlaying a loading spinner.
                 VStack {
-                    // ... (your existing if/else for viewModel.goals.isEmpty) ...
-                    if viewModel.goals.isEmpty {
-                        // ... Empty state view ...
-                         Spacer()
-                        VStack(spacing:15) {
-                            Image(systemName: "target")
-                                .font(.system(size: 60))
-                                .foregroundColor(secondaryTextColor.opacity(0.5))
-                            Text("No Goals Yet")
-                                .font(.title2.weight(.semibold))
-                                .foregroundColor(secondaryTextColor)
-                            Text("Tap the '+' button to create your first financial goal and start tracking your progress!")
-                                .font(.subheadline)
-                                .foregroundColor(secondaryTextColor.opacity(0.7))
+                    if viewModel.isLoading {
+                        Spacer()
+                        ProgressView()
+                            .scaleEffect(1.5)
+                        Spacer()
+                    } else if let errorMessage = viewModel.errorMessage {
+                        // Display an error message if something went wrong
+                        VStack {
+                            Spacer()
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .font(.largeTitle)
+                                .foregroundColor(.yellow)
+                            Text(errorMessage)
+                                .foregroundColor(.secondary)
                                 .multilineTextAlignment(.center)
-                                .padding(.horizontal, 40)
-                            Button {
-                                showingAddGoalView = true
-                            } label: {
-                                Text("Add Your First Goal")
-                                    .fontWeight(.semibold)
-                                    .padding(.horizontal, 20)
-                                    .padding(.vertical, 10)
-                                    .background(accentColorTeal)
-                                    .foregroundColor(.black) // Or dark gray for contrast
-                                    .cornerRadius(10)
-                            }
-                            .padding(.top)
+                                .padding()
+                            Spacer()
                         }
-                        Spacer()
-                        Spacer()
+                    } else if viewModel.goals.isEmpty {
+                        // The empty state view when there are no goals
+                        emptyStateView
                     } else {
+                        // The list of goals
                         List {
                             ForEach(viewModel.goals) { goal in
                                 FinancialGoalRowView(goal: goal)
-                                    .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
-                                    .listRowSeparator(.hidden)
-                                    .listRowBackground(screenBackgroundColor)
+                                    .listRowInsets(EdgeInsets())
+                                    .padding(.vertical, 8)
                             }
+                            // FIXED: This now correctly calls the async delete function in the ViewModel.
                             .onDelete(perform: viewModel.deleteGoal)
+                            .listRowSeparator(.hidden)
+                            .listRowBackground(Color(red: 0.08, green: 0.09, blue: 0.10))
                         }
                         .listStyle(.plain)
-                        .background(screenBackgroundColor)
+                        .refreshable {
+                            // Allows pull-to-refresh
+                            await viewModel.fetchGoals()
+                        }
                     }
                 }
             }
-            // REMOVE .navigationTitle("Financial Goals") if using .principal below for inline title
+            .navigationTitle("Financial Goals")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button(action: { presentationMode.wrappedValue.dismiss() }) {
-                        Image(systemName: "chevron.backward")
-                            .foregroundColor(mainTextColor)
-                    }
-                    .opacity(0) // Still hidden as per previous, adjust if needed
-                }
-                
-                // --- START: CUSTOM TITLE ---
-                ToolbarItem(placement: .principal) {
-                    Text("Financial Goals")
-                        .font(.system(size: 20, weight: .bold)) // Style to match default inline title
-                        .foregroundColor(mainTextColor)       // Explicitly set color
-                }
-                // --- END: CUSTOM TITLE ---
-                
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
                         showingAddGoalView = true
                     } label: {
                         Image(systemName: "plus.circle.fill")
                             .font(.system(size: 22))
-                            .foregroundColor(accentColorTeal)
+                            .foregroundColor(Color(hex: "3AD7D5"))
                     }
                 }
             }
-            // .toolbarColorScheme(.dark, for: .navigationBar) // You can keep or remove this; the custom principal item will take precedence for the title color.
             .sheet(isPresented: $showingAddGoalView) {
-                AddFinancialGoalView(viewModel: viewModel)
+                // FIXED: Pass the viewModel to the sheet's environment for cleaner access.
+                AddFinancialGoalView()
+                    .environmentObject(viewModel)
             }
-            .preferredColorScheme(.dark) // Good to maintain overall dark theme context
+            // FIXED: This task runs when the view first appears to fetch data from the server.
+            .task {
+                await viewModel.fetchGoals()
+            }
         }
-        // .navigationViewStyle(.stack) // Useful on iPad to avoid split view issues if not desired
+        .preferredColorScheme(.dark)
+    }
+    
+    // A reusable view for the empty state
+    private var emptyStateView: some View {
+        VStack(spacing: 15) {
+            Spacer()
+            Image(systemName: "target")
+                .font(.system(size: 60))
+                .foregroundColor(Color(hex: "A0A0A0").opacity(0.5))
+            Text("No Goals Yet")
+                .font(.title2.weight(.semibold))
+                .foregroundColor(Color(hex: "A0A0A0"))
+            Text("Tap the '+' button to create your first financial goal and start tracking your progress!")
+                .font(.subheadline)
+                .foregroundColor(Color(hex: "A0A0A0").opacity(0.7))
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 40)
+            Spacer()
+            Spacer()
+        }
     }
 }
 // MARK: - Preview

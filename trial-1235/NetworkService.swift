@@ -1,104 +1,138 @@
-//
-//  NetworkService.swift
-//  trial-1235
-//
-//  Created by AI Assistant on 07/06/25.
-//
-//  FINAL CORRECTED VERSION
-//
-
 import Foundation
-import SwiftUI // Required for Color
 
 // MARK: - Network Error Enum
 enum NetworkError: Error {
     case invalidURL
-    case noData
-    case decodingError(Error)
     case serverError(String)
-    case unknown
-    
-    var localizedDescription: String {
-        switch self {
-        case .invalidURL:
-            return "The server URL was invalid."
-        case .noData:
-            return "Did not receive any data from the server."
-        case .decodingError(let error):
-            // Provide more specific decoding errors for debugging
-            if let decodingError = error as? DecodingError {
-                switch decodingError {
-                case .keyNotFound(let key, let context):
-                    return "Failed to decode: Missing key '\(key.stringValue)' in response. \(context.debugDescription)"
-                case .typeMismatch(_, let context):
-                    return "Failed to decode: Type mismatch. \(context.debugDescription)"
-                case .valueNotFound(_, let context):
-                    return "Failed to decode: Value not found. \(context.debugDescription)"
-                case .dataCorrupted(let context):
-                    return "Failed to decode: Data is corrupted. \(context.debugDescription)"
-                @unknown default:
-                    return "An unknown decoding error occurred."
-                }
-            }
-            return "Failed to decode the server response."
-        case .serverError(let message):
-            return "Server error: \(message)"
-        case .unknown:
-            return "An unknown error occurred."
-        }
-    }
+    case decodingError(Error)
+    case encodingError(Error)
+    case noToken
 }
-
 
 // MARK: - Network Service Class
 class NetworkService {
     static let shared = NetworkService()
-    // For local testing, use http://localhost:3000. For production, use your deployed server URL.
-    private let baseURL = "http://localhost:3000"
+    private let baseURL = "http://localhost:3000/api"
+
+    // This token must be set after the user logs in and saved securely.
+    var authToken: String?
+
+    // Private helper to create and configure requests
+    private func createRequest(with endpoint: String, method: String, body: (any Encodable)? = nil) throws -> URLRequest {
+        guard let url = URL(string: baseURL + endpoint) else {
+            throw NetworkError.invalidURL
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = method
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        if let token = authToken {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+
+        if let body = body {
+            do {
+                request.httpBody = try JSONEncoder().encode(body)
+            } catch {
+                throw NetworkError.encodingError(error)
+            }
+        }
+        return request
+    }
     
-    private init() {}
+    // Private helper to execute the network request
+    private func executeRequest<T: Decodable>(for request: URLRequest) async throws -> T {
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
+            let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown server error"
+            throw NetworkError.serverError("Server responded with status code \((response as? HTTPURLResponse)?.statusCode ?? 500). Message: \(errorMessage)")
+        }
+        
+        do {
+            // The JSONDecoder will now correctly decode the expected type T
+            return try JSONDecoder().decode(T.self, from: data)
+        } catch {
+            throw NetworkError.decodingError(error)
+        }
+    }
+
+    // MARK: - Authentication API
     
-    // This struct matches the request body your server expects.
-    private struct PlanRequest: Encodable {
+    private struct AuthRequest: Encodable {
+        let email: String
+        let password: String
+    }
+    
+    private struct AuthResponse: Decodable {
+        let token: String
+    }
+
+    func login(email: String, password: String) async throws {
+        let authRequest = AuthRequest(email: email, password: password)
+        let request = try createRequest(with: "/auth/login", method: "POST", body: authRequest)
+        let response: AuthResponse = try await executeRequest(for: request)
+        
+        // Save the token upon successful login
+        self.authToken = response.token
+    }
+
+    // MARK: - Financial Goals API
+    
+    func fetchGoals() async throws -> [FinancialGoal] {
+        let request = try createRequest(with: "/goals", method: "GET")
+        // FIXED: The generic executeRequest function handles decoding an array correctly.
+        return try await executeRequest(for: request)
+    }
+
+    // A Codable struct for the request body is the correct, type-safe approach.
+    private struct GoalRequestBody: Encodable {
+        let name: String
+        let targetAmount: Double
+        let currentAmount: Double
+        let deadline: String?
+    }
+
+    func addGoal(name: String, targetAmount: Double, currentAmount: Double, deadline: Date?) async throws -> FinancialGoal {
+        let body = GoalRequestBody(
+            name: name,
+            targetAmount: targetAmount,
+            currentAmount: currentAmount,
+            deadline: deadline?.ISO8601Format()
+        )
+        let request = try createRequest(with: "/goals", method: "POST", body: body)
+        // FIXED: The generic executeRequest function handles decoding a single object correctly.
+        return try await executeRequest(for: request)
+    }
+
+    func deleteGoal(id: String) async throws {
+        let request = try createRequest(with: "/goals/\(id)", method: "DELETE")
+        // For delete, we don't need to decode a response body, just ensure it doesn't throw an error.
+        _ = try await URLSession.shared.data(for: request)
+    }
+    
+    private struct ContributionRequestBody: Encodable {
+        let amount: Double
+    }
+
+    func contributeToGoal(id: String, amount: Double) async throws -> FinancialGoal {
+        let body = ContributionRequestBody(amount: amount)
+        let request = try createRequest(with: "/goals/\(id)/contribute", method: "PATCH", body: body)
+        return try await executeRequest(for: request)
+    }
+
+    // MARK: - AI Planner API
+    private struct PlanRequestBody: Encodable {
         let monthlyIncome: Double
         let monthlyExpenses: Double
         let financialGoals: String
     }
     
-    // This function is now clean, simple, and relies on Codable.
     func generateFinancialPlan(monthlyIncome: Double, monthlyExpenses: Double, financialGoals: String) async throws -> FinancialPlan {
-        let endpoint = "\(baseURL)/api/generate-plan"
-        
-        guard let url = URL(string: endpoint) else {
-            throw NetworkError.invalidURL
-        }
-        
-        let requestBody = PlanRequest(
-            monthlyIncome: monthlyIncome,
-            monthlyExpenses: monthlyExpenses,
-            financialGoals: financialGoals
-        )
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
-        // Use JSONEncoder with Codable for type-safe encoding.
-        request.httpBody = try JSONEncoder().encode(requestBody)
-
-        let (data, response) = try await URLSession.shared.data(for: request)
-        
-        guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
-            let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown server error"
-            throw NetworkError.serverError("Status code: \((response as? HTTPURLResponse)?.statusCode ?? 500), message: \(errorMessage)")
-        }
-        
-        // Use JSONDecoder with Codable for safe and automatic decoding.
-        // No more manual parsing needed.
-        do {
-            return try JSONDecoder().decode(FinancialPlan.self, from: data)
-        } catch {
-            throw NetworkError.decodingError(error)
-        }
+        let body = PlanRequestBody(monthlyIncome: monthlyIncome, monthlyExpenses: monthlyExpenses, financialGoals: financialGoals)
+        // FIXED: The endpoint should be added to the base URL, not a full URL itself.
+        let request = try createRequest(with: "/generate-plan", method: "POST", body: body)
+        return try await executeRequest(for: request)
     }
 }

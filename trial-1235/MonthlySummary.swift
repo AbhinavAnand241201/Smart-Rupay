@@ -1,6 +1,6 @@
 import SwiftUI
 import Charts // Ensure Charts is imported
-
+//trying to resolve some issues here , will do it tmr.
 // Assume Color(hex: String) extension is globally available.
 
 // MARK: - Data Models for Analysis (same as before)
