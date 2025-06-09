@@ -5,16 +5,17 @@ struct PremiumSubscriptionView: View {
     @State private var showContent = false
 
     var body: some View {
+        // The NavigationView is essential for the sub-navigation to the CheckoutView.
         NavigationView {
             ZStack {
-                // REDESIGNED: New animated, multi-color aurora background
                 AnimatedAuroraBackground()
 
+                // FIXED: The ScrollView now ignores the top safe area, allowing the
+                // background and content to go all the way to the top edge of the screen.
                 ScrollView(.vertical, showsIndicators: false) {
                     VStack(spacing: 25) {
                         SubscriptionHeaderView()
                             .opacity(showContent ? 1 : 0)
-                            // REDESIGNED: Animation is now a gentle scale and fade
                             .scaleEffect(showContent ? 1 : 0.95)
                             .animation(.easeOut(duration: 0.6).delay(0.2), value: showContent)
 
@@ -25,21 +26,16 @@ struct PremiumSubscriptionView: View {
                                 }
                                 .opacity(showContent ? 1 : 0)
                                 .scaleEffect(showContent ? 1 : 0.95)
-                                // REDESIGNED: Staggered animation without the irritating slide
                                 .animation(.easeOut(duration: 0.6).delay(0.4 + Double(index) * 0.2), value: showContent)
                             }
                         }
                         .padding(.horizontal)
                         .padding(.bottom, 40)
                     }
-                    .padding(.vertical, 20)
+                    // FIXED: Applying a single, deliberate padding at the top of the content.
+                    .padding(.top, 60) // This provides space for the close button area.
                 }
-                // ENHANCEMENT: Adds a frosted glass effect to the navigation bar area
-                .safeAreaInset(edge: .top) {
-                    Color.clear.frame(height: 0)
-                        .background(.ultraThinMaterial)
-                        .blur(radius: 2)
-                }
+                .ignoresSafeArea(edges: .top)
             }
             .navigationBarHidden(true)
         }
@@ -50,55 +46,32 @@ struct PremiumSubscriptionView: View {
     }
 }
 
-// MARK: - Animated Background Subview
-
+// MARK: - Animated Background (No Changes)
 private struct AnimatedAuroraBackground: View {
     @State private var animate = false
-
     var body: some View {
         ZStack {
             Color(hex: "0D0E0F").ignoresSafeArea()
-
-            // ENHANCEMENT: Multiple blurred, colored circles for a vibrant aurora effect
-            Circle()
-                .fill(Color.blue.opacity(0.3))
-                .frame(width: 300)
-                .blur(radius: 120)
-                .offset(x: animate ? 100 : -100, y: -150)
-            
-            Circle()
-                .fill(Color.green.opacity(0.3))
-                .frame(width: 350)
-                .blur(radius: 140)
-                .offset(x: animate ? -100 : 100, y: -50)
-
-            Circle()
-                .fill(Color.red.opacity(0.3))
-                .frame(width: 250)
-                .blur(radius: 100)
-                .offset(x: animate ? 50 : 0, y: 200)
+            Circle().fill(Color.blue.opacity(0.3)).frame(width: 300).blur(radius: 120).offset(x: animate ? 100 : -100, y: -150)
+            Circle().fill(Color.green.opacity(0.3)).frame(width: 350).blur(radius: 140).offset(x: animate ? -100 : 100, y: -50)
+            Circle().fill(Color.red.opacity(0.3)).frame(width: 250).blur(radius: 100).offset(x: animate ? 50 : 0, y: 200)
         }
-        .onAppear {
-            withAnimation(.easeInOut(duration: 10).repeatForever()) {
-                animate.toggle()
-            }
-        }
+        .onAppear { withAnimation(.easeInOut(duration: 10).repeatForever()) { animate.toggle() } }
     }
 }
 
 // MARK: - UI Components
 
 private struct SubscriptionHeaderView: View {
+    @State private var isGlowing = false
+
     var body: some View {
         VStack(spacing: 12) {
-            Image(systemName: "sparkles")
-                .font(.system(size: 50))
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [Color.blue, Color.green, Color.red],
-                        startPoint: .topLeading, endPoint: .bottomTrailing
-                    )
-                )
+            ZStack {
+                Image(systemName: "sparkles").font(.system(size: 50)).foregroundStyle(Color.green.opacity(0.5)).blur(radius: isGlowing ? 15 : 5)
+                Image(systemName: "sparkles").font(.system(size: 50)).foregroundStyle(LinearGradient(colors: [.green, .blue], startPoint: .topLeading, endPoint: .bottomTrailing))
+            }
+            .onAppear { withAnimation(.easeInOut(duration: 2).repeatForever()) { isGlowing.toggle() } }
             
             Text("Unlock Smart-Rupay Pro")
                 .font(.largeTitle.bold())
@@ -110,7 +83,8 @@ private struct SubscriptionHeaderView: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
         }
-        .padding(.top, 40)
+        // FIXED: Removed the internal `.padding(.top, 40)` which was creating the large unwanted gap.
+        // Spacing is now handled by the parent ScrollView for better control.
     }
 }
 
@@ -123,8 +97,7 @@ private struct PlanCardView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(plan.name).font(.title2).bold()
-                    Text("₹\(Int(plan.price))").font(.title.weight(.medium))
-                    + Text(" / year").font(.headline.weight(.regular)).foregroundColor(.gray)
+                    Text("₹\(Int(plan.price))").font(.title.weight(.medium)) + Text(" / year").font(.headline.weight(.regular)).foregroundColor(.gray)
                 }
                 Spacer()
                 if let savings = plan.savings {
@@ -133,9 +106,7 @@ private struct PlanCardView: View {
                         .foregroundColor(.black)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 5)
-                        .background(
-                            LinearGradient(colors: [.green, .blue], startPoint: .leading, endPoint: .trailing)
-                        )
+                        .background(LinearGradient(colors: [.green, .blue], startPoint: .leading, endPoint: .trailing))
                         .clipShape(Capsule())
                 }
             }
@@ -146,9 +117,7 @@ private struct PlanCardView: View {
                 ForEach(plan.features) { feature in
                     HStack(spacing: 12) {
                         Image(systemName: feature.iconName)
-                            .foregroundStyle(
-                                LinearGradient(colors: [.green, .blue], startPoint: .top, endPoint: .bottom)
-                            )
+                            .foregroundStyle(LinearGradient(colors: [.green, .blue], startPoint: .top, endPoint: .bottom))
                             .frame(width: 20)
                         Text(feature.text)
                     }
@@ -158,16 +127,13 @@ private struct PlanCardView: View {
         }
         .foregroundColor(.white)
         .padding()
-        .background(.black.opacity(0.3)) // More contrast for glass effect
+        .background(.black.opacity(0.3))
         .background(.ultraThinMaterial)
         .cornerRadius(20)
         .overlay(
             RoundedRectangle(cornerRadius: 20)
                 .stroke(
-                    LinearGradient(
-                        colors: [.green.opacity(0.8), .blue.opacity(0.8)],
-                        startPoint: .topLeading, endPoint: .bottomTrailing
-                    ),
+                    LinearGradient(colors: [.green.opacity(0.8), .blue.opacity(0.8)], startPoint: .topLeading, endPoint: .bottomTrailing),
                     lineWidth: 2
                 )
         )
@@ -175,7 +141,7 @@ private struct PlanCardView: View {
     }
 }
 
-// The CheckoutView, SubscriptionViewModel, and SubscriptionModels files remain the same as the previous step.
+// NOTE: The other files (`CheckoutView`, `SubscriptionViewModel`, etc.) do not need to be changed.
 
 struct PremiumSubscriptionView_Previews: PreviewProvider {
     static var previews: some View {
