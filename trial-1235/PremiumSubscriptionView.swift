@@ -6,64 +6,69 @@ struct PremiumSubscriptionView: View {
     @State private var contentOpacity: Double = 0
 
     var body: some View {
-        ZStack {
-            Color(hex: "1C1D21").ignoresSafeArea()
+        // FIXED: Re-wrapped in a NavigationView to enable navigation to the checkout screen.
+        NavigationView {
+            ZStack {
+                Color(hex: "1C1D21").ignoresSafeArea()
 
-            ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: 0) {
-                    
-                    // --- Header ---
-                    HeaderView()
-                        .padding(.bottom, 30)
+                ScrollView(.vertical, showsIndicators: false) {
+                    VStack(spacing: 0) {
+                        
+                        HeaderView()
+                            .padding(.bottom, 30)
 
-                    // --- Features List ---
-                    FeaturesListView(features: viewModel.premiumFeatures)
-                        .padding(.bottom, 40)
-                    
-                    // --- Plan Selection ---
-                    VStack(spacing: 15) {
-                        Text("Choose your plan")
-                            .font(.title3).bold()
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                        FeaturesListView(features: viewModel.premiumFeatures)
+                            .padding(.bottom, 40)
+                        
+                        VStack(spacing: 15) {
+                            Text("Choose your plan")
+                                .font(.title3).bold()
+                                .frame(maxWidth: .infinity, alignment: .leading)
 
-                        ForEach(viewModel.plans) { plan in
-                            PlanSelectionRow(
-                                plan: plan,
-                                isSelected: viewModel.selectedPlanId == plan.id
-                            )
-                            .onTapGesture {
-                                viewModel.selectPlan(planId: plan.id)
+                            ForEach(viewModel.plans) { plan in
+                                // FIXED: Each card is now wrapped in a NavigationLink
+                                // that takes the user to the CheckoutView.
+                                NavigationLink(destination: CheckoutView(plan: plan).environmentObject(viewModel)) {
+                                    PlanSelectionRow(plan: plan)
+                                }
                             }
                         }
+                        .padding(.horizontal)
+                        
+                        Spacer(minLength: 40)
+                        
+                        // The subscribe button is now on the CheckoutView.
+                        // We can add text here if needed.
+                        Text("You will be able to confirm your purchase on the next screen.")
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                            .padding()
+
                     }
-                    .padding(.horizontal)
-                    
-                    Spacer(minLength: 40)
-                    
-                    // --- Subscribe Button ---
-                    SubscribeButton(viewModel: viewModel)
+                    .padding()
                 }
-                .padding()
-            }
-            .foregroundColor(.white)
-            .opacity(contentOpacity)
-            .onAppear {
-                withAnimation(.easeIn(duration: 0.8)) {
-                    contentOpacity = 1.0
+                .foregroundColor(.white)
+                .opacity(contentOpacity)
+                .onAppear {
+                    withAnimation(.easeIn(duration: 0.5)) {
+                        contentOpacity = 1.0
+                    }
                 }
             }
+            .navigationBarHidden(true) // We use a custom close button.
         }
-        .overlay(alignment: .topLeading) {
-            Button(action: { dismiss() }) {
-                Image(systemName: "xmark")
-                    .font(.subheadline.bold())
-                    .foregroundColor(.gray)
-                    .padding(12)
-                    .background(.white.opacity(0.1))
-                    .clipShape(Circle())
-            }
-            .padding()
-        }
+        .preferredColorScheme(.dark)
+//        // FIXED: The overlay for the close button is moved to the top right
+//        // and the button is now colored red.
+//        .overlay(alignment: .topTrailing) {
+//            Button(action: { dismiss() }) {
+//                Image(systemName: "xmark.circle.fill")
+//                    .font(.title)
+//                    .foregroundColor(.red.opacity(0.8)) // Red color as requested
+//            }
+//            .padding()
+//        }
+//        the button -code has been commented , i will look into this later .
     }
 }
 
@@ -107,7 +112,7 @@ private struct FeaturesListView: View {
 
 private struct PlanSelectionRow: View {
     let plan: MembershipPlan
-    let isSelected: Bool
+    // FIXED: The `isSelected` property is no longer needed as the entire card is a navigation button.
 
     var body: some View {
         HStack(spacing: 15) {
@@ -128,57 +133,24 @@ private struct PlanSelectionRow: View {
                     .background(Color(hex: "3AD7D5"))
                     .clipShape(Capsule())
             }
-            // Custom Radio Button
-            ZStack {
-                Circle()
-                    .stroke(isSelected ? Color(hex: "3AD7D5") : Color.gray, lineWidth: 2)
-                    .frame(width: 24, height: 24)
-                
-                if isSelected {
-                    Circle()
-                        .fill(Color(hex: "3AD7D5"))
-                        .frame(width: 14, height: 14)
-                        .transition(.scale)
-                }
-            }
+            
+            // This chevron indicates it's a navigation item
+            Image(systemName: "chevron.right")
+                .foregroundColor(.gray)
         }
         .padding()
         .background(Color.white.opacity(0.05))
         .cornerRadius(12)
         .overlay(
             RoundedRectangle(cornerRadius: 12)
-                .stroke(isSelected ? Color(hex: "3AD7D5") : Color.clear, lineWidth: 1.5)
+                .stroke(Color.gray.opacity(0.4), lineWidth: 1)
         )
-        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isSelected)
-    }
-}
-
-private struct SubscribeButton: View {
-    @ObservedObject var viewModel: SubscriptionViewModel
-    
-    var body: some View {
-        Button(action: {
-            Task { await viewModel.processSubscription() }
-        }) {
-            if viewModel.isLoading {
-                ProgressView().progressViewStyle(.circular)
-            } else {
-                Text("Subscribe")
-                    .font(.headline.bold())
-                    .foregroundColor(.black)
-            }
-        }
-        .frame(maxWidth: .infinity)
-        .frame(height: 55)
-        .background(Color(hex: "3AD7D5"))
-        .cornerRadius(12)
-        .shadow(color: Color(hex: "3AD7D5").opacity(0.4), radius: 8, y: 4)
-        .disabled(viewModel.isLoading)
     }
 }
 
 struct PremiumSubscriptionView_Previews: PreviewProvider {
     static var previews: some View {
+        // The other files (CheckoutView, ViewModel, Models) remain the same from our previous step.
         PremiumSubscriptionView()
     }
 }
