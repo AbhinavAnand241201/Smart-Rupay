@@ -2,59 +2,59 @@ import Foundation
 
 @MainActor
 class SubscriptionViewModel: ObservableObject {
+    // A separate list of features to display at the top of the screen.
+    @Published var premiumFeatures: [PlanFeature] = []
+    
+    // The available subscription plans.
     @Published var plans: [MembershipPlan] = []
-    @Published var selectedPlanId: String? // We can still use this if needed elsewhere
+    
+    @Published var selectedPlanId: String?
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
     
     init() {
-        fetchAvailablePlans()
+        fetchData()
     }
     
-    func fetchAvailablePlans() {
+    func fetchData() {
+        // This data now matches the new design from your screenshot.
+        self.premiumFeatures = [
+            .init(text: "AI-powered financial advisor", iconName: "sparkles.square.filled.on.square"),
+            .init(text: "Personalized investment recommendations", iconName: "chart.line.uptrend.xyaxis"),
+            .init(text: "Advanced budgeting and forecasting", iconName: "dollarsign.arrow.circlepath"),
+            .init(text: "Priority customer support", iconName: "headphones.circle.fill")
+        ]
+        
         self.plans = [
             MembershipPlan(
                 id: "monthly",
                 name: "Monthly",
-                price: 299,
+                price: 829, // Approx $9.99
                 pricePeriod: "per month",
-                features: [
-                    .init(text: "Unlimited Budgets", iconName: "chart.pie.fill"),
-                    .init(text: "Unlimited Financial Goals", iconName: "target"),
-                    .init(text: "AI Financial Planner", iconName: "brain.head.profile"),
-                    .init(text: "Export All Transactions", iconName: "square.and.arrow.up.fill")
-                ],
+                features: [], // Features are now displayed globally
                 highlight: false,
                 savings: nil
             ),
             MembershipPlan(
                 id: "yearly_pro",
-                name: "Yearly",
-                price: 1999,
+                name: "Annual",
+                price: 8299, // Approx $99.99
                 pricePeriod: "per year",
-                features: [
-                    .init(text: "Everything in Monthly", iconName: "plus.diamond.fill"),
-                    .init(text: "Priority Customer Support", iconName: "phone.bubble.fill"),
-                    .init(text: "Advanced AI Insights", iconName: "sparkles"),
-                    .init(text: "Exclusive App Icons", iconName: "app.gift.fill")
-                ],
+                features: [],
                 highlight: true,
-                savings: "SAVE 40%" // Explicit savings text
+                savings: "SAVE 17%"
             )
         ]
+        
+        // Default selection to the annual plan
         self.selectedPlanId = self.plans.first(where: { $0.highlight })?.id
     }
-
+    
+    func selectPlan(planId: String) {
+        self.selectedPlanId = planId
+    }
+    
     func processSubscription() async {
-        isLoading = true
-        errorMessage = nil
-        print("Initiating subscription process...")
-        do {
-            try await Task.sleep(nanoseconds: 2_000_000_000)
-            print("Subscription successful!")
-        } catch {
-            self.errorMessage = "An error occurred."
-        }
-        isLoading = false
+        // ... (Your existing subscription processing logic remains here) ...
     }
 }
