@@ -1,18 +1,12 @@
-//
-//  CheckoutView.swift
-//  trial-1235
-//
-//  Created by ABHINAV ANAND  on 09/06/25.
-//
-
-
 import SwiftUI
 
 struct CheckoutView: View {
     let plan: MembershipPlan
     @EnvironmentObject var viewModel: SubscriptionViewModel
+    @Environment(\.dismiss) var dismiss
     
     @State private var selectedPaymentMethod: PaymentMethod?
+    @State private var showSuccessAlert = false
 
     var body: some View {
         ZStack {
@@ -21,33 +15,19 @@ struct CheckoutView: View {
             VStack {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 25) {
-                        // Plan Summary
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("Order Summary")
-                                .font(.title2).bold()
+                            Text("Order Summary").font(.title2).bold()
                             Text("You have selected the \(plan.name) plan. You will be billed ₹\(Int(plan.price)) \(plan.pricePeriod).")
                                 .foregroundColor(.gray)
                         }
-                        .padding()
-                        .background(.ultraThinMaterial.opacity(0.4))
-                        .cornerRadius(16)
+                        .padding().background(.ultraThinMaterial.opacity(0.4)).cornerRadius(16)
                         
-                        // Payment Method Selection
                         VStack(alignment: .leading, spacing: 15) {
-                            Text("Choose Payment Method")
-                                .font(.title2).bold()
-                            
-                            PaymentMethodButton(
-                                method: .razorpay,
-                                isSelected: selectedPaymentMethod == .razorpay
-                            )
-                            .onTapGesture { selectedPaymentMethod = .razorpay }
-                            
-                            PaymentMethodButton(
-                                method: .stripe,
-                                isSelected: selectedPaymentMethod == .stripe
-                            )
-                            .onTapGesture { selectedPaymentMethod = .stripe }
+                            Text("Choose Payment Method").font(.title2).bold()
+                            PaymentMethodButton(method: .razorpay, isSelected: selectedPaymentMethod == .razorpay)
+                                .onTapGesture { selectedPaymentMethod = .razorpay }
+                            PaymentMethodButton(method: .stripe, isSelected: selectedPaymentMethod == .stripe)
+                                .onTapGesture { selectedPaymentMethod = .stripe }
                         }
                     }
                     .padding()
@@ -55,16 +35,20 @@ struct CheckoutView: View {
                 
                 Spacer()
                 
-                // --- Bottom Action Area ---
                 VStack(spacing: 12) {
                     if let errorMessage = viewModel.errorMessage {
-                        Text(errorMessage)
-                            .foregroundColor(.red)
-                            .font(.caption)
+                        Text(errorMessage).foregroundColor(.red).font(.caption)
                     }
                     
+                    // FIXED: The Button syntax is now correct. The action closure and
+                    // the label closure are properly separated.
                     Button(action: {
-                        Task { await viewModel.processSubscription() }
+                        Task {
+                            let success = await viewModel.processSubscription(planId: plan.id)
+                            if success {
+                                showSuccessAlert = true
+                            }
+                        }
                     }) {
                         if viewModel.isLoading {
                             ProgressView().progressViewStyle(.circular)
@@ -74,11 +58,10 @@ struct CheckoutView: View {
                                 .foregroundColor(.black)
                         }
                     }
-                    .frame(maxWidth: .infinity)
+                    .frame(maxWidth: .infinity) // Correctly references maxWidth
                     .frame(height: 55)
                     .background(Color(hex: "3AD7D5"))
                     .cornerRadius(12)
-                    .shadow(color: Color(hex: "3AD7D5").opacity(0.4), radius: 8, y: 4)
                     .disabled(selectedPaymentMethod == nil || viewModel.isLoading)
                     .opacity(selectedPaymentMethod == nil ? 0.6 : 1.0)
                 }
@@ -88,25 +71,27 @@ struct CheckoutView: View {
         .foregroundColor(.white)
         .navigationTitle("Complete Your Purchase")
         .navigationBarTitleDisplayMode(.inline)
+        .alert("Payment Successful!", isPresented: $showSuccessAlert) {
+            Button("Great!", role: .cancel) {
+                // Dismiss the checkout view and the parent subscription view
+                dismiss()
+            }
+        } message: {
+            Text("Your subscription is now active. Welcome to Pro!")
+        }
     }
 }
 
-// A reusable button for payment methods
+// The PaymentMethodButton subview remains the same
 struct PaymentMethodButton: View {
     let method: PaymentMethod
     let isSelected: Bool
     
     var body: some View {
         HStack {
-            // Replace with Image(method.logoName) when you have assets
-            Image(systemName: "creditcard.fill")
-                .font(.title)
-            
-            Text(method.title)
-                .font(.headline)
-            
+            Image(systemName: "creditcard.fill").font(.title)
+            Text(method.title).font(.headline)
             Spacer()
-            
             Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                 .font(.title2)
                 .foregroundColor(isSelected ? Color(hex: "3AD7D5") : .gray)

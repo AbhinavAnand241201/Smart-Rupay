@@ -1,12 +1,3 @@
-//
-//  FinancialAdvisorOnboardingView.swift
-//  trial-1235
-//
-//  Created by ABHINAV ANAND  on 02/06/25.
-//
-//  MODIFIED by Gemini AI on 07/06/25 for safe, educational plan generation.
-//
-
 import SwiftUI
 
 struct FinancialAdvisorOnboardingView: View {
@@ -14,7 +5,6 @@ struct FinancialAdvisorOnboardingView: View {
     @State private var monthlyExpenses: String = ""
     @State private var financialGoals: String = ""
     
-    // State variables for the feature
     @State private var isLoading: Bool = false
     @State private var showPlanSheet: Bool = false
     @State private var financialPlan: FinancialPlan?
@@ -23,15 +13,12 @@ struct FinancialAdvisorOnboardingView: View {
 
     // MARK: - UI Colors & Styles
     let backgroundColor = Color(red: 0.07, green: 0.08, blue: 0.09)
-    let inputFieldBackgroundColor = Color(red: 0.12, green: 0.13, blue: 0.15)
-    let placeholderTextColor = Color(hex: "8A8A8E")
     let buttonAndTitleAccentColor = Color(hex: "38D9A9")
     let subtitleTextColor = Color(hex: "AEAEB2")
 
     var body: some View {
         ZStack {
             backgroundColor.ignoresSafeArea()
-
             ScrollView {
                 VStack(alignment: .center, spacing: 20) {
                     Spacer(minLength: 40)
@@ -39,21 +26,17 @@ struct FinancialAdvisorOnboardingView: View {
                     Text("AI Financial Planner")
                         .font(.system(size: 30, weight: .bold, design: .rounded))
                         .foregroundColor(buttonAndTitleAccentColor)
-                        .padding(.bottom, 5)
-
+                    
                     Text("Get an educational plan based on established financial frameworks.")
-                        .font(.system(size: 16, weight: .regular, design: .rounded))
+                        .font(.system(size: 16))
                         .foregroundColor(subtitleTextColor)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 30)
                         .padding(.bottom, 30)
 
-                    CustomStyledTextField(placeholder: "Your Monthly Income", text: $monthlyIncome, keyboardType: .decimalPad)
-                    CustomStyledTextField(placeholder: "Your Monthly Expenses", text: $monthlyExpenses, keyboardType: .decimalPad)
+                    CustomStyledTextField(placeholder: "Your Monthly Income (₹)", text: $monthlyIncome, keyboardType: .decimalPad)
+                    CustomStyledTextField(placeholder: "Your Monthly Expenses (₹)", text: $monthlyExpenses, keyboardType: .decimalPad)
                     CustomStyledTextField(placeholder: "Your Main Financial Goal (e.g., Buy a car)", text: $financialGoals)
-                        .lineLimit(3)
-
-                    Spacer()
                 }
                 .padding(.horizontal, 20)
             }
@@ -75,9 +58,7 @@ struct FinancialAdvisorOnboardingView: View {
                 .cornerRadius(14)
                 .disabled(isLoading)
                 .padding(.horizontal, 25)
-                .padding(.bottom, (UIApplication.shared.connectedScenes
-                                    .compactMap { $0 as? UIWindowScene }
-                                    .first?.windows.first?.safeAreaInsets.bottom ?? 0) + 15)
+                .padding(.bottom, 20)
             }
             .ignoresSafeArea(.keyboard, edges: .bottom)
         }
@@ -91,7 +72,6 @@ struct FinancialAdvisorOnboardingView: View {
         .alert(isPresented: $showAlert) {
             Alert(title: Text("Invalid Input"), message: Text(alertMessage), dismissButton: .default(Text("OK")))
         }
-        .preferredColorScheme(.dark)
         .onTapGesture {
             UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
         }
@@ -99,12 +79,13 @@ struct FinancialAdvisorOnboardingView: View {
     
     @MainActor
     private func generateFinancialPlan() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        
         guard let income = Double(monthlyIncome), income > 0 else {
             alertMessage = "Please enter a valid monthly income."
             showAlert = true
             return
         }
-        
         guard let expenses = Double(monthlyExpenses), expenses >= 0 else {
             alertMessage = "Please enter a valid number for monthly expenses."
             showAlert = true
@@ -115,37 +96,28 @@ struct FinancialAdvisorOnboardingView: View {
         
         Task {
             do {
-                // Call the network service to generate the financial plan
-                let plan = try await NetworkService.shared.generateFinancialPlan(
+                // FIXED: Create the request body object first, as the NetworkService expects.
+                let requestBody = PlanRequestBody(
                     monthlyIncome: income,
                     monthlyExpenses: expenses,
                     financialGoals: financialGoals
                 )
                 
-                // Update the UI on the main thread
+                // FIXED: Pass the single 'body' object to the function. This resolves both errors.
+                let plan = try await NetworkService.shared.generateFinancialPlan(body: requestBody)
+                
                 self.financialPlan = plan
                 self.showPlanSheet = true
-                self.isLoading = false
                 
             } catch let error as NetworkError {
-                // Handle network errors
                 alertMessage = error.localizedDescription
                 showAlert = true
-                isLoading = false
-                
             } catch {
-                // Handle any other errors
-                alertMessage = "An unexpected error occurred. Please try again."
+                alertMessage = "An unexpected error occurred: \(error.localizedDescription)"
                 showAlert = true
-                isLoading = false
             }
+            
+            self.isLoading = false
         }
-    }
-}
-
-// MARK: - Preview
-struct FinancialAdvisorOnboardingView_Previews: PreviewProvider {
-    static var previews: some View {
-        FinancialAdvisorOnboardingView()
     }
 }
