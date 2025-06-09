@@ -11,7 +11,6 @@ struct FinancialAdvisorOnboardingView: View {
     @State private var showAlert = false
     @State private var alertMessage = ""
 
-    // MARK: - UI Colors & Styles
     let backgroundColor = Color(red: 0.07, green: 0.08, blue: 0.09)
     let buttonAndTitleAccentColor = Color(hex: "38D9A9")
     let subtitleTextColor = Color(hex: "AEAEB2")
@@ -96,14 +95,12 @@ struct FinancialAdvisorOnboardingView: View {
         
         Task {
             do {
-                // FIXED: Create the request body object first, as the NetworkService expects.
                 let requestBody = PlanRequestBody(
                     monthlyIncome: income,
                     monthlyExpenses: expenses,
                     financialGoals: financialGoals
                 )
                 
-                // FIXED: Pass the single 'body' object to the function. This resolves both errors.
                 let plan = try await NetworkService.shared.generateFinancialPlan(body: requestBody)
                 
                 self.financialPlan = plan

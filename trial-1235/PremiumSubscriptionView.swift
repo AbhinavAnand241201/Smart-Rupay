@@ -6,7 +6,6 @@ struct PremiumSubscriptionView: View {
     @State private var contentOpacity: Double = 0
 
     var body: some View {
-        // FIXED: Re-wrapped in a NavigationView to enable navigation to the checkout screen.
         NavigationView {
             ZStack {
                 Color(hex: "1C1D21").ignoresSafeArea()
@@ -26,8 +25,6 @@ struct PremiumSubscriptionView: View {
                                 .frame(maxWidth: .infinity, alignment: .leading)
 
                             ForEach(viewModel.plans) { plan in
-                                // FIXED: Each card is now wrapped in a NavigationLink
-                                // that takes the user to the CheckoutView.
                                 NavigationLink(destination: CheckoutView(plan: plan).environmentObject(viewModel)) {
                                     PlanSelectionRow(plan: plan)
                                 }
@@ -37,8 +34,6 @@ struct PremiumSubscriptionView: View {
                         
                         Spacer(minLength: 40)
                         
-                        // The subscribe button is now on the CheckoutView.
-                        // We can add text here if needed.
                         Text("You will be able to confirm your purchase on the next screen.")
                             .font(.caption)
                             .foregroundColor(.gray)
@@ -55,24 +50,11 @@ struct PremiumSubscriptionView: View {
                     }
                 }
             }
-            .navigationBarHidden(true) // We use a custom close button.
+            .navigationBarHidden(true)
         }
         .preferredColorScheme(.dark)
-//        // FIXED: The overlay for the close button is moved to the top right
-//        // and the button is now colored red.
-//        .overlay(alignment: .topTrailing) {
-//            Button(action: { dismiss() }) {
-//                Image(systemName: "xmark.circle.fill")
-//                    .font(.title)
-//                    .foregroundColor(.red.opacity(0.8)) // Red color as requested
-//            }
-//            .padding()
-//        }
-//        the button -code has been commented , i will look into this later .
     }
 }
-
-// MARK: - Subviews
 
 private struct HeaderView: View {
     var body: some View {
@@ -112,14 +94,13 @@ private struct FeaturesListView: View {
 
 private struct PlanSelectionRow: View {
     let plan: MembershipPlan
-    // FIXED: The `isSelected` property is no longer needed as the entire card is a navigation button.
 
     var body: some View {
         HStack(spacing: 15) {
             VStack(alignment: .leading) {
                 Text(plan.name)
                     .font(.headline)
-                Text("₹\(Int(plan.price)) / \(plan.pricePeriod.split(separator: " ").last ?? "")")
+                Text("₹\(Int(plan.price)) /\(plan.pricePeriod.split(separator: " ").last ?? "")")
                     .font(.subheadline)
                     .foregroundColor(.gray)
             }
@@ -134,7 +115,6 @@ private struct PlanSelectionRow: View {
                     .clipShape(Capsule())
             }
             
-            // This chevron indicates it's a navigation item
             Image(systemName: "chevron.right")
                 .foregroundColor(.gray)
         }
@@ -150,7 +130,6 @@ private struct PlanSelectionRow: View {
 
 struct PremiumSubscriptionView_Previews: PreviewProvider {
     static var previews: some View {
-        // The other files (CheckoutView, ViewModel, Models) remain the same from our previous step.
         PremiumSubscriptionView()
     }
 }

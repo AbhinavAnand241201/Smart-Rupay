@@ -1,8 +1,5 @@
 import Foundation
 
-// MARK: - API Helper Structs & Enums
-// These are now globally accessible within your app module.
-
 enum NetworkError: Error {
     case invalidURL
     case serverError(String)
@@ -10,26 +7,21 @@ enum NetworkError: Error {
     case encodingError(Error)
 }
 
-// Request Bodies
 struct AuthRequest: Encodable { let email, password: String }
 struct GoalRequestBody: Encodable { let name: String; let targetAmount, currentAmount: Double; let deadline: Date? }
 struct ContributionRequestBody: Encodable { let amount: Double }
 struct PlanRequestBody: Encodable { let monthlyIncome, monthlyExpenses: Double; let financialGoals: String }
 struct PlanIdRequest: Encodable { let planId: String }
 
-// Response Bodies
 struct AuthResponse: Decodable { let token: String }
 struct FulfillmentResponse: Decodable { let message: String; let subscribedUntil: Date }
 struct PaymentIntentResponse: Decodable { let clientSecret: String }
 
-
-// MARK: - Network Service Class
 class NetworkService {
     static let shared = NetworkService()
     private let baseURL = "http://localhost:3000/api"
     var authToken: String?
 
-    // Private helper methods
     private func createRequest(with endpoint: String, method: String, body: (any Encodable)? = nil) throws -> URLRequest {
         guard let url = URL(string: baseURL + endpoint) else { throw NetworkError.invalidURL }
         var request = URLRequest(url: url)
@@ -55,8 +47,6 @@ class NetworkService {
         decoder.dateDecodingStrategy = .iso8601
         return try decoder.decode(T.self, from: data)
     }
-
-    // MARK: - API Functions
     
     func login(credentials: AuthRequest) async throws -> AuthResponse {
         let request = try createRequest(with: "/auth/login", method: "POST", body: credentials)
@@ -75,13 +65,11 @@ class NetworkService {
         return try await executeRequest(for: request)
     }
     
-    // FIXED: This function is now present.
     func deleteGoal(id: String) async throws {
         let request = try createRequest(with: "/goals/\(id)", method: "DELETE")
-        _ = try await URLSession.shared.data(for: request) // We don't need to decode a response
+        _ = try await URLSession.shared.data(for: request)
     }
 
-    // FIXED: This function is now present.
     func contributeToGoal(id: String, body: ContributionRequestBody) async throws -> FinancialGoal {
         let request = try createRequest(with: "/goals/\(id)/contribute", method: "PATCH", body: body)
         return try await executeRequest(for: request)

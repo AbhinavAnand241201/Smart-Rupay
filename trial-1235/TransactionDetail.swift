@@ -73,7 +73,7 @@ fileprivate struct TransactionSectionView: View {
 struct TransactionsScreenView: View {
     @EnvironmentObject var transactionStore: TransactionStore
 
-    // FIXED: State variable to control showing the "Add Transaction" sheet.
+
     @State private var showAddTransactionSheet = false
     @State private var activeFilters = TransactionFilterCriteria()
     
@@ -85,9 +85,9 @@ struct TransactionsScreenView: View {
                     .foregroundColor(Color.white)
                 Spacer()
                 
-                // FIXED: This is the plus button in the top right corner.
+
                 Button(action: {
-                    showAddTransactionSheet.toggle() // This now opens the sheet.
+                    showAddTransactionSheet.toggle()
                 }) {
                     Image(systemName: "plus.circle.fill")
                         .font(.system(size: 22))
@@ -104,13 +104,12 @@ struct TransactionsScreenView: View {
             }
             .listStyle(.plain)
             .background(Color(red: 0.08, green: 0.09, blue: 0.10))
-            // FIXED: This modifier presents the AddTransactionView when the button is tapped.
+
             .sheet(isPresented: $showAddTransactionSheet) {
                 AddTransactionView()
             }
             .onChange(of: activeFilters) { newFilters in
-                // This is where your filtering logic would be triggered
-                // transactionStore.groupTransactions(criteria: newFilters)
+
             }
         }
     }

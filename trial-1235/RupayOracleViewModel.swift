@@ -1,36 +1,32 @@
-// RupayOracleViewModel.swift
-// Smart-Rupay App - Full Corrected Version
-// RupayOracleViewModel.swift
-// Smart-Rupay App - Phase 2 Enhancements
+
 
 import SwiftUI
 import Combine
 
-// Make sure your TransactionDetail, BudgetStatusItem, and FinancialGoal structs are defined
-// and accessible. Color(hex:) extension must also be globally available.
+
 
 class RupayOracleViewModel: ObservableObject {
-    // --- Inputs (These would ideally come from other services/data stores) ---
+
     @Published var averageMonthlyIncomeString: String = "5000"
     @Published var allTransactions: [TransactionDetail] = []
     @Published var budgetItems: [BudgetStatusItem] = []
     @Published var financialGoals: [FinancialGoal] = []
 
-    // --- Outputs for the UI ---
+
     @Published var overallWellnessScore: Double = 0.0
     @Published var budgetAdherenceScore: Double = 0.0
     @Published var emergencyFundProgressScore: Double = 0.0
-    @Published var savingsRate: Double = 0.0 // Percentage
-    @Published var savingsRateScore: Double = 0.0 // Scored version of savings rate (0-100)
+    @Published var savingsRate: Double = 0.0
+    @Published var savingsRateScore: Double = 0.0
     @Published var averageMonthlyExpenses: Double = 0.0
     @Published var oracleTip: String = "Let's analyze your finances to get your first tip!"
     @Published var badges: [Badge] = []
 
-    // --- Simulated Historical Data for Phase 2 Trend Nudges ---
+
     private var lastMonthBudgetAdherence: Double = 65.0
     private var lastMonthSavingsRate: Double = 8.0
 
-    let accentColorTeal = Color(hex: "3AD7D5") // Assumes Color(hex:) is available
+    let accentColorTeal = Color(hex: "3AD7D5")
     let categoryColors = [
         Color(hex: "FF3399"), Color.orange, Color(hex: "39FF14"),
         Color(hex: "007BFF"), Color(hex: "FFD700"), Color(hex: "BF00FF"), Color(hex: "FF4500")
@@ -147,13 +143,13 @@ class RupayOracleViewModel: ObservableObject {
         oracleTip = potentialTips.randomElement() ?? "Rupay Oracle is analyzing your data. Check back soon for fresh insights!"
     }
     
-    // In RupayOracleViewModel.swift
+
 
     static func generateSampleTransactions() -> [TransactionDetail] {
         let calendar = Calendar.current
         let today = Date()
         
-        // FIXED: All initializers now correctly use `id: UUID()`, `iconBackgroundColorHex`, and pass a String hex value.
+
         return [
             TransactionDetail(id: UUID(), date: calendar.date(byAdding: .day, value: -2, to: today)!, iconName: "cart.fill", iconBackgroundColorHex: "#8E8E93", name: "Groceries A", category: "Groceries", amount: -70.0),
             TransactionDetail(id: UUID(), date: calendar.date(byAdding: .day, value: -5, to: today)!, iconName: "fork.knife", iconBackgroundColorHex: "#FF9500", name: "Restaurant B", category: "Dining Out", amount: -45.0),
@@ -171,33 +167,24 @@ class RupayOracleViewModel: ObservableObject {
     static func generateSampleGoals(colors: [Color]) -> [FinancialGoal] {
          let calendar = Calendar.current
         return [
-            FinancialGoal(name: "Emergency Fund", targetAmount: 5000, currentAmount: 2500, deadline: calendar.date(byAdding: .year, value: 1, to: Date()), iconName: "shield.lefthalf.filled", colorHex: colors[4 % colors.count].toHex() ?? "FFD700"), // Error was here
-            FinancialGoal(name: "Dream Vacation", targetAmount: 3000, currentAmount: 2950, deadline: calendar.date(byAdding: .month, value: 2, to: Date()), iconName: "airplane", colorHex: colors[5 % colors.count].toHex() ?? "007BFF"), // And here
-            FinancialGoal(name: "Completed Goal Example", targetAmount: 500, currentAmount: 500, deadline: calendar.date(byAdding: .month, value: -1, to: Date()), iconName: "star.fill", colorHex: Color.green.toHex() ?? "34C759") // And here
+            FinancialGoal(name: "Emergency Fund", targetAmount: 5000, currentAmount: 2500, deadline: calendar.date(byAdding: .year, value: 1, to: Date()), iconName: "shield.lefthalf.filled", colorHex: colors[4 % colors.count].toHex() ?? "FFD700"),
+            FinancialGoal(name: "Dream Vacation", targetAmount: 3000, currentAmount: 2950, deadline: calendar.date(byAdding: .month, value: 2, to: Date()), iconName: "airplane", colorHex: colors[5 % colors.count].toHex() ?? "007BFF"),
+            FinancialGoal(name: "Completed Goal Example", targetAmount: 500, currentAmount: 500, deadline: calendar.date(byAdding: .month, value: -1, to: Date()), iconName: "star.fill", colorHex: Color.green.toHex() ?? "34C759")
         ]
     }
 }
 
-// MARK: - Color toHex Extension
-// Place this extension in a global Extensions.swift file or ensure it's accessible.
-// If you already have this from previous steps, you don't need to redefine it.
-// This is a simplified version. For production, a more robust solution might be needed.
+
 extension Color {
     func toHex() -> String? {
         let uic = UIColor(self)
         guard let components = uic.cgColor.components, components.count >= 3 else {
             // Attempt to handle system colors like .blue, .green which might not have direct RGB components this way
-            // This is a very basic fallback and might not work for all system colors or dynamic colors.
-            // For a more robust solution, you might need to draw the color into a context to get its RGB.
-            // For now, returning nil or a placeholder if direct components aren't available.
-            // Or, ensure your 'categoryColors' and 'badge accentColors' are defined with Color(hex:) or Color(red:green:blue:)
-            // print("Warning: Could not get RGB components for color \(self). This might be a system color.")
-            // Fallback for some common system colors if needed for sample data only:
+    
             if uic == UIColor.blue { return "007AFF" }
             if uic == UIColor.green { return "34C759" }
             if uic == UIColor.orange { return "FF9500" }
-            // ... add more if necessary for sample data, but ideally define colors with RGB/Hex initially.
-            return nil // Or a default hex like "000000"
+            return nil
         }
         let r = Int(components[0] * 255.0)
         let g = Int(components[1] * 255.0)

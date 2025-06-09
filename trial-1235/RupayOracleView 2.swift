@@ -1,29 +1,17 @@
-// RupayOracleView 2.swift
-// Smart-Rupay App - Phase 2 UI Updates - Corrected
 
-//
-//  RupayOracleView 2.swift
-//  trial-1235
-//
-//  Created by ABHINAV ANAND  on 05/06/25.
-//
-
-
-// RupayOracleView.swift
-// Smart-Rupay App - Phase 2 UI Updates
 
 import SwiftUI
 
 struct RupayOracleView: View {
     @StateObject private var viewModel: RupayOracleViewModel
     
-    // UI Colors
+
     let screenBackgroundColor = Color(red: 0.08, green: 0.09, blue: 0.10)
     let cardBackgroundColor = Color(red: 0.15, green: 0.16, blue: 0.18)
     let mainTextColor = Color.white
     let secondaryTextColor = Color(hex: "A0A0A0") // Assumes Color(hex:) is available
-    let accentColorTeal = Color(hex: "3AD7D5") // Assumes Color(hex:) is available
-    let headerTextColor = Color(hex: "BEBEBE") // For section headers within this view
+    let accentColorTeal = Color(hex: "3AD7D5")
+    let headerTextColor = Color(hex: "BEBEBE")
     
     init(viewModel: RupayOracleViewModel = RupayOracleViewModel()) {
         _viewModel = StateObject(wrappedValue: viewModel)
@@ -41,7 +29,7 @@ struct RupayOracleView: View {
                         VStack(alignment: .leading) {
                             Text("Average Monthly Income")
                                 .font(.headline)
-                                .foregroundColor(headerTextColor) // Use headerTextColor
+                                .foregroundColor(headerTextColor)
                             HStack {
                                 Text("$")
                                     .foregroundColor(mainTextColor)
@@ -88,7 +76,7 @@ struct RupayOracleView: View {
                                 title: "Avg. Monthly Expenses",
                                 value: String(format: "$%.2f", viewModel.averageMonthlyExpenses),
                                 interpretation: "Based on last 30 days",
-                                color: secondaryTextColor // Use secondaryTextColor as it's informational
+                                color: secondaryTextColor
                             )
                         }
                         .padding(.horizontal)
@@ -141,7 +129,7 @@ struct RupayOracleView: View {
     }
 }
 
-// MARK: - Subviews for RupayOracleView (MUST BE INCLUDED)
+
 
 struct OverallWellnessScoreView: View {
     let score: Double
@@ -160,7 +148,7 @@ struct OverallWellnessScoreView: View {
                     .trim(from: 0.0, to: CGFloat(min(score / 100.0, 1.0)))
                     .stroke(style: StrokeStyle(lineWidth: 15, lineCap: .round, lineJoin: .round))
                     .foregroundColor(accentColor)
-                    .rotationEffect(Angle(degrees: -90.0)) // Start from top
+                    .rotationEffect(Angle(degrees: -90.0))
                     .animation(.interactiveSpring(), value: score)
 
                 Text(String(format: "%.0f", score))
@@ -207,7 +195,7 @@ struct MetricCardView: View {
             if let progress = progress {
                 ProgressView(value: progress)
                     .progressViewStyle(LinearProgressViewStyle(tint: color))
-                    .scaleEffect(x: 1, y: 1.5, anchor: .center) // Thicker progress bar
+                    .scaleEffect(x: 1, y: 1.5, anchor: .center)
                     .clipShape(Capsule())
                     .padding(.top, 4)
             }
@@ -243,7 +231,7 @@ struct OracleTipView: View {
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(cardBackgroundColor.opacity(0.85)) // Slightly different opacity
+        .background(cardBackgroundColor.opacity(0.85))
         .cornerRadius(10)
         .overlay(
             RoundedRectangle(cornerRadius: 10)
@@ -255,28 +243,28 @@ struct OracleTipView: View {
 struct AchievementsView: View {
     let badges: [Badge]
     
-    let cardBackgroundColor = Color(red: 0.15, green: 0.16, blue: 0.18) // Standard card bg
+    let cardBackgroundColor = Color(red: 0.15, green: 0.16, blue: 0.18)
     let mainTextColor = Color.white
-    let headerTextColor = Color(hex: "BEBEBE") // Brighter gray for header
+    let headerTextColor = Color(hex: "BEBEBE")
 
     var body: some View {
         if !badges.isEmpty {
             VStack(alignment: .leading, spacing: 10) {
                 Text("Your Achievements")
                     .font(.headline)
-                    .foregroundColor(headerTextColor) // Use specific header text color
+                    .foregroundColor(headerTextColor)
                 
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 12) {
                         ForEach(badges) { badge in
                             VStack(spacing: 6) {
                                 Image(systemName: badge.isAchieved ? badge.achievedIconName : badge.iconName)
-                                    .font(.system(size: 28)) // Badge icon size
+                                    .font(.system(size: 28))
                                     .foregroundColor(badge.isAchieved ? badge.accentColor : Color.gray.opacity(0.4))
-                                    .frame(width: 55, height: 55) // Consistent frame for icon part
+                                    .frame(width: 55, height: 55)
                                     .background(
                                         (badge.isAchieved ? badge.accentColor : Color.gray)
-                                            .opacity(0.1) // Softer background
+                                            .opacity(0.1)
                                             .clipShape(Circle())
                                     )
                                 
@@ -285,36 +273,35 @@ struct AchievementsView: View {
                                     .foregroundColor(mainTextColor)
                                     .lineLimit(2)
                                     .multilineTextAlignment(.center)
-                                    .frame(width: 70) // Width for text below icon
+                                    .frame(width: 70)
                                 
                                 if badge.isAchieved, let date = badge.achievedDate {
-                                     Text(date.formatted(.dateTime.month().day())) // Shorter date format
+                                     Text(date.formatted(.dateTime.month().day()))
                                         .font(.caption2)
                                         .foregroundColor(Color(hex:"A0A0A0"))
                                 } else if !badge.isAchieved {
-                                    Text("Locked") // Placeholder for unachieved
+                                    Text("Locked")
                                         .font(.caption2)
                                         .foregroundColor(Color.gray.opacity(0.6))
                                 }
                             }
                             .padding(10)
-                            .frame(width: 90) // Overall width for each badge item card
+                            .frame(width: 90)
                             .background(cardBackgroundColor.opacity(0.7))
                             .cornerRadius(10)
                         }
                     }
-                    .padding(.vertical, 5) // Padding for the scroll content
+                    .padding(.vertical, 5)
                 }
             }
         } else {
-            // Optionally show a placeholder if no badges are achieved yet but badges array is not empty
-            // Or simply EmptyView if you only want to show achieved badges.
+
             EmptyView()
         }
     }
 }
 
-// MARK: - Preview
+
 struct RupayOracleView_Previews_Phase2: PreviewProvider {
     static var previews: some View {
         let sampleViewModel = RupayOracleViewModel(
@@ -323,7 +310,7 @@ struct RupayOracleView_Previews_Phase2: PreviewProvider {
             sampleGoals: RupayOracleViewModel.generateSampleGoals(colors: [Color.purple, Color.pink])
         )
         sampleViewModel.averageMonthlyIncomeString = "6000"
-        sampleViewModel.recalculateWellnessMetrics() // Ensure metrics are calculated for preview
+        sampleViewModel.recalculateWellnessMetrics()
 
         return RupayOracleView(viewModel: sampleViewModel)
     }

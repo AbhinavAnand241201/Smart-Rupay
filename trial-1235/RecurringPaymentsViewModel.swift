@@ -1,6 +1,3 @@
-// RecurringPaymentsViewModel.swift
-// Smart-Rupay App
-
 import SwiftUI
 import Combine
 import UserNotifications
@@ -9,65 +6,48 @@ class RecurringPaymentsViewModel: ObservableObject {
     @Published var recurringPayments: [RecurringPayment] = []
     @Published var notificationAuthStatus: UNAuthorizationStatus = .notDetermined
 
-    
-    
-    // Predefined visuals for new recurring payments
     let itemVisuals: [(icon: String, colorHex: String)] = [
         ("creditcard.fill", "007BFF"), ("house.fill", "39FF14"), ("phone.fill", "BF00FF"),
         ("bolt.car.fill", "FFD700"), ("figure.walk", "FF3399"), ("newspaper.fill", "FF4500"),
         ("lightbulb.fill", "3AD7D5"), ("wifi", "5E5CE6"), ("tv.fill", "AF52DE")
-    ].shuffled() // Shuffle for variety
+    ].shuffled()
     private var nextVisualIndex = 0
     
-    // Sample categories - replace with your app's actual category system
     let sampleCategories = ["Subscription", "Housing", "Utilities", "Loan", "Membership", "Bills", "Insurance", "Internet", "Entertainment"].sorted()
     
-    
-    // MARK: - Data Persistence
-        private let paymentsSaveKey = "UserRecurringPayments"
+    private let paymentsSaveKey = "UserRecurringPayments"
 
-        private func savePayments() {
-            do {
-                let data = try JSONEncoder().encode(recurringPayments)
-                UserDefaults.standard.set(data, forKey: paymentsSaveKey)
-            } catch {
-                print("Failed to save payments: \(error.localizedDescription)")
-            }
+    private func savePayments() {
+        do {
+            let data = try JSONEncoder().encode(recurringPayments)
+            UserDefaults.standard.set(data, forKey: paymentsSaveKey)
+        } catch {
+            print("Failed to save payments: \(error.localizedDescription)")
         }
+    }
 
-        private func loadPayments() {
-            guard let data = UserDefaults.standard.data(forKey: paymentsSaveKey) else {
-                self.recurringPayments = []
-                return
-            }
-            
-            do {
-                self.recurringPayments = try JSONDecoder().decode([RecurringPayment].self, from: data)
-            } catch {
-                print("Failed to load payments: \(error.localizedDescription)")
-                self.recurringPayments = []
-            }
+    private func loadPayments() {
+        guard let data = UserDefaults.standard.data(forKey: paymentsSaveKey) else {
+            self.recurringPayments = []
+            return
         }
-
-//    init() {
-//        loadSamplePayments() // Load initial data
-//        checkNotificationPermission() // Check current permission status on init
-//        // Schedule reminders when ViewModel initializes if permission is already granted
-//        // This ensures reminders are set if the app was closed and reopened.
-//        if notificationAuthStatus == .authorized {
-//            scheduleInitialRemindersForAllActivePayments()
-//        }
-//    }
-    // What to change
-        init() {
-            loadPayments() // Load saved data
-            checkNotificationPermission()
-            if notificationAuthStatus == .authorized {
-                scheduleInitialRemindersForAllActivePayments()
-            }
+        
+        do {
+            self.recurringPayments = try JSONDecoder().decode([RecurringPayment].self, from: data)
+        } catch {
+            print("Failed to load payments: \(error.localizedDescription)")
+            self.recurringPayments = []
         }
+    }
 
-    // --- Notification Logic ---
+    init() {
+        loadPayments()
+        checkNotificationPermission()
+        if notificationAuthStatus == .authorized {
+            scheduleInitialRemindersForAllActivePayments()
+        }
+    }
+
     func checkNotificationPermission() {
         NotificationManager.shared.getNotificationAuthorizationStatus { status in
             self.notificationAuthStatus = status
@@ -87,11 +67,10 @@ class RecurringPaymentsViewModel: ObservableObject {
         guard notificationAuthStatus == .authorized else { return }
         print("Scheduling initial reminders for all active payments...")
         recurringPayments.forEach { payment in
-            // Only schedule for non-ended payments whose next due date is today or in the future.
             if !payment.isEnded && payment.nextDueDate >= Calendar.current.startOfDay(for: Date()) {
                 NotificationManager.shared.scheduleNotification(for: payment, reminderDaysBefore: daysBefore, atHour: dueTodayHour)
             } else {
-                NotificationManager.shared.cancelNotification(for: payment) // Clean up old ones
+                NotificationManager.shared.cancelNotification(for: payment)
             }
         }
     }
@@ -100,10 +79,9 @@ class RecurringPaymentsViewModel: ObservableObject {
         NotificationManager.shared.openAppSettings()
     }
 
-    // --- CRUD Operations ---
     func addPayment(name: String, amount: Double, category: String, interval: RecurrenceInterval, startDate: Date, endDate: Date?, notes: String?) {
         let visual = itemVisuals[nextVisualIndex % itemVisuals.count]
-        nextVisualIndex = (nextVisualIndex + 1) % itemVisuals.count // Cycle through visuals
+        nextVisualIndex = (nextVisualIndex + 1) % itemVisuals.count
 
         let newPayment = RecurringPayment(
             name: name, amount: amount, category: category,
@@ -124,9 +102,6 @@ class RecurringPaymentsViewModel: ObservableObject {
         if let index = recurringPayments.firstIndex(where: { $0.id == paymentToUpdate.id }) {
             var updatedPayment = paymentToUpdate
             
-            // Recalculate nextDueDate if vital scheduling info changed.
-            // The RecurringPayment init already handles initial nextDueDate correctly based on startDate.
-            // If startDate itself or interval changed, recalculate nextDueDate based on today.
             if recurringPayments[index].startDate != updatedPayment.startDate || recurringPayments[index].recurrenceInterval != updatedPayment.recurrenceInterval {
                  updatedPayment.nextDueDate = RecurringPayment.calculateCorrectNextDueDate(
                     from: updatedPayment.startDate,
@@ -134,15 +109,13 @@ class RecurringPaymentsViewModel: ObservableObject {
                     after: Date()
                 )
             }
-            // else, keep the existing nextDueDate unless explicitly changed in the edit form
-            // (AddEditRecurringPaymentView does not directly edit nextDueDate, it's derived)
 
             recurringPayments[index] = updatedPayment
             sortPayments()
 
-            NotificationManager.shared.cancelNotification(for: updatedPayment) // Cancel old
+            NotificationManager.shared.cancelNotification(for: updatedPayment)
             if notificationAuthStatus == .authorized && !updatedPayment.isEnded && updatedPayment.nextDueDate >= Calendar.current.startOfDay(for: Date()) {
-                NotificationManager.shared.scheduleNotification(for: updatedPayment) // Schedule new
+                NotificationManager.shared.scheduleNotification(for: updatedPayment)
             }
             savePayments()
         }
@@ -152,29 +125,19 @@ class RecurringPaymentsViewModel: ObservableObject {
         guard let index = recurringPayments.firstIndex(where: { $0.id == paymentId }) else { return }
         
         var payment = recurringPayments[index]
-        let paidOnDate = payment.nextDueDate // Assume payment is made on its due date
+        let paidOnDate = payment.nextDueDate
 
-        // --- Placeholder for Creating an Actual Transaction ---
         print("--- PAYMENT TRACKED ---")
         print("Recurring payment '\(payment.name)' for $ \(String(format: "%.2f", payment.amount)) due on \(paidOnDate.formatted(date: .long, time: .omitted)) marked as PAID.")
         print("TODO: Create a TransactionDetail record: category='\(payment.category)', amount='-\(payment.amount)', date='\(paidOnDate)'.")
         print("------------------------")
-        // Example:
-        // let newTransaction = TransactionDetail(date: paidOnDate, iconName: payment.iconName, ... amount: -payment.amount, ...)
-        // mainTransactionStore.add(newTransaction) // Assuming you have a way to add to main transactions
 
-        NotificationManager.shared.cancelNotification(for: payment) // Cancel reminder for the date just paid
+        NotificationManager.shared.cancelNotification(for: payment)
 
-        // Advance to the next sequential due date
         let newAdvancedDueDate = payment.getNextSequentialDueDate()
         
-        // Check if this new due date is beyond the end date
         if let endDate = payment.endDate, newAdvancedDueDate > endDate {
-            // The payment's recurrence has finished.
-            // Keep nextDueDate as the one that was just paid, or the endDate if preferred for "Ended" state.
-            // The isEnded property will handle display.
-            // For clarity, let's set nextDueDate to the newAdvancedDueDate, and isEnded will use endDate.
-            payment.nextDueDate = newAdvancedDueDate // It will be > endDate
+            payment.nextDueDate = newAdvancedDueDate
             print("\(payment.name) has concluded its recurrence period.")
         } else {
             payment.nextDueDate = newAdvancedDueDate
@@ -183,7 +146,6 @@ class RecurringPaymentsViewModel: ObservableObject {
         recurringPayments[index] = payment
         sortPayments()
 
-        // Schedule notification for the new nextDueDate if still active
         if notificationAuthStatus == .authorized && !payment.isEnded && payment.nextDueDate >= Calendar.current.startOfDay(for: Date()) {
             NotificationManager.shared.scheduleNotification(for: payment)
         }

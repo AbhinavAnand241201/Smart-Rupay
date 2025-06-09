@@ -1,14 +1,11 @@
 import SwiftUI
 
-// This file is now fully corrected and functional.
-
 struct SignUpScreenView: View {
     @State private var fullName = ""
     @State private var email = ""
     @State private var password = ""
     @State private var confirmPassword = ""
 
-    // MARK: - UI Colors (now handled by a central theme, but kept for reference)
     let screenBackgroundColor = Color(red: 0.08, green: 0.09, blue: 0.10)
     let mainTextColor = Color.white
     let accentColorTeal = Color(hex: "3AD7D5")
@@ -23,7 +20,6 @@ struct SignUpScreenView: View {
             screenBackgroundColor.ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // MARK: - Top Navigation Bar
                 HStack {
                     Button(action: {
                         presentationMode.wrappedValue.dismiss()
@@ -55,9 +51,6 @@ struct SignUpScreenView: View {
                             .padding(.top, 15)
                             .padding(.bottom, 25)
 
-                        // MARK: - Input Fields
-                        // FIXED: The calls to CustomStyledTextField are now corrected.
-                        // The extra color arguments have been removed to match the simplified definition.
                         CustomStyledTextField(
                             placeholder: "Full Name",
                             text: $fullName
@@ -81,7 +74,6 @@ struct SignUpScreenView: View {
                             isSecure: true
                         )
 
-                        // MARK: - Sign Up Button
                         Button(action: {
                             print("Sign Up tapped with Email: \(email), FullName: \(fullName)")
                         }) {
@@ -95,13 +87,11 @@ struct SignUpScreenView: View {
                         }
                         .padding(.top, 10)
 
-                        // MARK: - "Or" Separator
                         Text("Or")
                             .font(.system(size: 14, weight: .medium))
                             .foregroundColor(orTextColor)
                             .padding(.vertical, 15)
 
-                        // MARK: - Sign up with Google Button
                         Button(action: {
                             print("Sign up with Google tapped")
                         }) {
@@ -125,7 +115,6 @@ struct SignUpScreenView: View {
                 
                 Spacer()
 
-                // MARK: - Log In Link
                 HStack(spacing: 4) {
                     Text("Already have an account?")
                         .font(.system(size: 14))
@@ -151,10 +140,9 @@ struct SignUpScreenView: View {
     }
 }
 
-// MARK: - Preview (Sign Up Screen)
 struct SignUpScreenView_Previews_Themed: PreviewProvider {
     static var previews: some View {
-        NavigationView { // Good to preview with NavigationView for the back button
+        NavigationView {
             SignUpScreenView()
         }
     }

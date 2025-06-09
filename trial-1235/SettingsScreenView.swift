@@ -1,23 +1,13 @@
-//
-//  SettingsScreenView.swift
-//  trial-1235
-//
-//  Created by ABHINAV ANAND  on 03/06/25.
-//
-
-
 import SwiftUI
 
-// Assume Color(hex: String) extension is globally available.
-
 struct SettingsScreenView: View {
-    // State variables for toggles
+
     @State private var isFaceIDEnabled = true
     @State private var areNotificationsEnabled = false
 
-    // MARK: - UI Colors (Aligned with Budgets Screen Theme)
+
     let screenBackgroundColor = Color(red: 0.08, green: 0.09, blue: 0.10)
-    // rowBackgroundColor is now applied by SettingsSectionView to the group
+
     let sectionHeaderColor = Color(hex: "A0A0A0")
     let mainTextColor = Color.white
     let secondaryTextColor = Color(hex: "8E8E93")
@@ -31,7 +21,7 @@ struct SettingsScreenView: View {
             screenBackgroundColor.ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // MARK: - Top Navigation Bar (same as before)
+
                 HStack {
                     Button(action: {
                         presentationMode.wrappedValue.dismiss()
@@ -53,7 +43,7 @@ struct SettingsScreenView: View {
 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 25) {
-                        // MARK: - Account Section
+
                         SettingsSectionView(title: "Account") {
                             NavigationLink(destination: EditProfileView_Placeholder()) {
                                 SettingRow(iconName: "person.fill", iconColor: accentColorTeal, title: "Edit Profile")
@@ -66,9 +56,8 @@ struct SettingsScreenView: View {
                             }
                         }
 
-                        // MARK: - Preferences Section
+
                         SettingsSectionView(title: "Preferences") {
-                            // Row with a Toggle
                             SettingRow(iconName: "bell.fill", iconColor: accentColorTeal, title: "Notifications") {
                                 Toggle("", isOn: $areNotificationsEnabled)
                                     .tint(accentColorTeal)
@@ -76,33 +65,31 @@ struct SettingsScreenView: View {
                             NavigationLink(destination: CurrencySelectionView_Placeholder()) {
                                 SettingRow(iconName: "dollarsign.circle.fill", iconColor: accentColorTeal, title: "Currency", value: "USD")
                             }
-                            // Row with a Toggle
                             SettingRow(iconName: "faceid", iconColor: accentColorTeal, title: "Enable Face ID") {
                                 Toggle("", isOn: $isFaceIDEnabled)
                                     .tint(accentColorTeal)
                             }
                         }
                         
-                        // MARK: - Security & Legal Section
+
                         SettingsSectionView(title: "Security & Legal") {
                             NavigationLink(destination: TwoFactorAuthView_Placeholder()) {
                                 SettingRow(iconName: "shield.lefthalf.filled", iconColor: accentColorTeal, title: "Two-Factor Authentication")
                             }
-                            // Action row that looks like navigation (added chevron)
+
                             SettingRow(iconName: "doc.text.fill", iconColor: accentColorTeal, title: "Privacy Policy", showsDisclosureChevron: true, action: { print("Privacy Policy Tapped") })
                             SettingRow(iconName: "checkmark.shield.fill", iconColor: accentColorTeal, title: "Terms of Service", showsDisclosureChevron: true, action: { print("Terms Tapped") })
                         }
 
-                        // MARK: - App Section
+
                         SettingsSectionView(title: "Application") {
-                            SettingRow(iconName: "info.circle.fill", iconColor: accentColorTeal, title: "App Version", value: "1.0.0 (Smart-Rupay)") // Informational
-                            // Action row that looks like navigation
+                            SettingRow(iconName: "info.circle.fill", iconColor: accentColorTeal, title: "App Version", value: "1.0.0 (Smart-Rupay)")
                             SettingRow(iconName: "star.fill", iconColor: accentColorTeal, title: "Rate Smart-Rupay", showsDisclosureChevron: true, action: {
                                 print("Rate App Tapped")
                             })
                         }
                         
-                        // MARK: - Log Out Section
+
                         SettingsSectionView {
                             SettingRow(iconName: "arrow.right.square.fill", iconColor: destructiveColor, title: "Log Out", titleColor: destructiveColor, action: {
                                 print("Log Out Tapped")
@@ -120,7 +107,7 @@ struct SettingsScreenView: View {
     }
 }
 
-// MARK: - Reusable Setting Row Components
+
 
 struct SettingsSectionView<Content: View>: View {
     let title: String?
@@ -135,10 +122,10 @@ struct SettingsSectionView<Content: View>: View {
                     .padding(.horizontal)
                     .padding(.bottom, 8)
             }
-            VStack(spacing: 1) { // Use 1 for a thin line effect if rows don't have their own bg
+            VStack(spacing: 1) {
                 content
             }
-            .background(Color(red: 0.15, green: 0.16, blue: 0.18)) // Group background
+            .background(Color(red: 0.15, green: 0.16, blue: 0.18))
             .cornerRadius(10)
             .padding(.horizontal)
         }
@@ -194,33 +181,27 @@ struct SettingRow<TrailingContent: View>: View {
             }
             .padding(.vertical, 14)
             .padding(.horizontal, 15)
-            .contentShape(Rectangle()) // Ensure the whole area is tappable for the button
+            .contentShape(Rectangle())
         }
-        // Removed the problematic .disabled() modifier
-        // If action is nil, tapping the Button does nothing, which is fine.
-        // NavigationLink and Toggle will handle their own interactions.
+
     }
 }
 
-// In SettingsScreenView.swift
-// In SettingsScreenView.swift
-
-// Convenience initializers for SettingRow
 extension SettingRow {
-    // For rows that are purely informational or simple actions without custom trailing UI
+
     init(iconName: String, iconColor: Color, title: String, titleColor: Color = .white, value: String? = nil, action: (() -> Void)? = nil) where TrailingContent == EmptyView {
         self.init(iconName: iconName, iconColor: iconColor, title: title, titleColor: titleColor, value: value, action: action) {
             EmptyView()
         }
     }
 
-    // For action rows that might display a disclosure chevron
-    // MODIFIED: Constraint changed to AnyView, and closure wrapped in AnyView
+
+
     init(iconName: String, iconColor: Color, title: String, titleColor: Color = .white, value: String? = nil, showsDisclosureChevron: Bool, action: @escaping () -> Void) where TrailingContent == AnyView {
         self.init(iconName: iconName, iconColor: iconColor, title: title, titleColor: titleColor, value: value, action: action) {
-            // Wrap the conditional content in AnyView to erase its specific type
+
             AnyView(
-                Group { // Group helps if AnyView expects a single expression sometimes
+                Group {
                     if showsDisclosureChevron {
                         Image(systemName: "chevron.right")
                             .font(.system(size: 14, weight: .semibold))
@@ -233,14 +214,14 @@ extension SettingRow {
         }
     }
 }
-// MARK: - Placeholder Destination Views (same as before)
+
 struct EditProfileView_Placeholder: View { var body: some View { Text("Edit Profile Screen").foregroundColor(.white).frame(maxWidth: .infinity, maxHeight: .infinity).background(Color(red: 0.08, green: 0.09, blue: 0.10).ignoresSafeArea()) } }
 struct ChangePasswordView_Placeholder: View { var body: some View { Text("Change Password Screen").foregroundColor(.white).frame(maxWidth: .infinity, maxHeight: .infinity).background(Color(red: 0.08, green: 0.09, blue: 0.10).ignoresSafeArea()) } }
 struct PaymentMethodsView_Placeholder: View { var body: some View { Text("Payment Methods Screen").foregroundColor(.white).frame(maxWidth: .infinity, maxHeight: .infinity).background(Color(red: 0.08, green: 0.09, blue: 0.10).ignoresSafeArea()) } }
 struct CurrencySelectionView_Placeholder: View { var body: some View { Text("Currency Selection Screen").foregroundColor(.white).frame(maxWidth: .infinity, maxHeight: .infinity).background(Color(red: 0.08, green: 0.09, blue: 0.10).ignoresSafeArea()) } }
 struct TwoFactorAuthView_Placeholder: View { var body: some View { Text("2FA Screen").foregroundColor(.white).frame(maxWidth: .infinity, maxHeight: .infinity).background(Color(red: 0.08, green: 0.09, blue: 0.10).ignoresSafeArea()) } }
 
-// MARK: - Preview
+
 struct SettingsScreenView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationView {

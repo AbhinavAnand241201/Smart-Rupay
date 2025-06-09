@@ -3,11 +3,10 @@ import Combine
 
 @MainActor
 class TransactionStore: ObservableObject {
-    // The raw list of all transactions, loaded from memory.
+
     @Published var transactions: [TransactionDetail] = []
     
-    // FIXED: A stable, published property that holds the grouped sections for the UI.
-    // The view will listen to this property for updates.
+
     @Published var groupedTransactions: [TransactionSection] = []
 
     private var cancellables = Set<AnyCancellable>()
@@ -16,8 +15,7 @@ class TransactionStore: ObservableObject {
     init() {
         loadTransactions()
 
-        // This powerful pipeline automatically calls `groupTransactions()` whenever
-        // the main `transactions` array is modified.
+
         $transactions
             .sink { [weak self] _ in
                 self?.groupTransactions()
@@ -25,15 +23,12 @@ class TransactionStore: ObservableObject {
             .store(in: &cancellables)
     }
 
-    /// This is the new central function for grouping and filtering.
-    /// It updates the `groupedTransactions` property, which causes the UI to refresh.
+
     func groupTransactions(criteria: TransactionFilterCriteria? = nil) {
         
         var filteredTransactions = transactions
 
-        // In the future, you can add your filter logic here based on the criteria
         if let criteria = criteria, criteria.isActive {
-            // Example: filteredTransactions = transactions.filter { ... }
         }
 
         let groupedDictionary = Dictionary(grouping: filteredTransactions) { transaction in

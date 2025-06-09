@@ -1,6 +1,3 @@
-// RecurringPaymentsScreen.swift
-// Smart-Rupay App
-
 import SwiftUI
 
 struct RecurringPaymentRowView: View {
@@ -62,7 +59,7 @@ struct RecurringPaymentRowView: View {
                         .font(.caption.bold())
                         .padding(.horizontal, 12)
                         .padding(.vertical, 7)
-                        .foregroundColor(Color.black) // Text on teal button
+                        .foregroundColor(Color.black)
                         .background(accentColorTeal)
                         .cornerRadius(8)
                 }
@@ -140,8 +137,7 @@ struct RecurringPaymentsListView: View {
                             .foregroundColor(accentColorTeal)
                     }
                 }
-                // Optional: Add a leading item if needed, e.g., back button if pushed
-                // ToolbarItem(placement: .navigationBarLeading) { ... }
+
             }
             .sheet(isPresented: $showingAddEditPaymentSheet) {
                 AddEditRecurringPaymentView(viewModel: viewModel, paymentToEdit: paymentToEdit)
@@ -153,7 +149,7 @@ struct RecurringPaymentsListView: View {
                 Text("To receive bill reminders, please enable notifications for Smart-Rupay in your iPhone's Settings app.")
             }
             .onAppear {
-                // This ensures status is checked and initial reminders are scheduled if permission exists
+
                  viewModel.checkNotificationPermission()
                  if viewModel.notificationAuthStatus == .authorized {
                      viewModel.scheduleInitialRemindersForAllActivePayments()
@@ -187,7 +183,7 @@ struct RecurringPaymentsListView: View {
                     .padding(.horizontal, 20)
                     .padding(.vertical, 10)
                     .background(accentColorTeal)
-                    .foregroundColor(.black) // Text on teal button
+                    .foregroundColor(.black)
                     .cornerRadius(10)
             }
             .padding(.top)

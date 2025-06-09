@@ -1,41 +1,26 @@
-//
-//  UserProfile.swift
-//  trial-1235
-//
-//  Created by ABHINAV ANAND  on 03/06/25.
-//
-
-
 import SwiftUI
 
-// Assume Color(hex: String) extension is globally available.
-// Assume SettingsSectionView and SettingRow (or similar adapted versions) are available or will be defined.
-// For simplicity, I'll redefine a slightly adapted SettingRow if needed for this context.
-
-// MARK: - User Profile Data Model (Example)
 struct UserProfile {
     var fullName: String
     var email: String
     var phoneNumber: String
-    var profileImageName: String // Name of the image asset
-    // Add other fields like dateOfBirth, address, etc.
+    var profileImageName: String
 }
 
 struct ProfileSettingsScreenView: View {
     @State private var userProfile = UserProfile(
-        fullName: "Ethan Carter", // Example Data
+        fullName: "Ethan Carter",
         email: "ethan.carter@example.com",
         phoneNumber: "+1 (555) 123-4567",
-        profileImageName: "ab1" // Using the placeholder from your previous files
+        profileImageName: "ab1"
     )
     
-    // MARK: - UI Colors (Consistent with App Theme)
     let screenBackgroundColor = Color(red: 0.08, green: 0.09, blue: 0.10)
     let sectionBackgroundColor = Color(red: 0.15, green: 0.16, blue: 0.18)
     let mainTextColor = Color.white
     let secondaryTextColor = Color(hex: "A0A0A0")
     let accentColorTeal = Color(hex: "3AD7D5")
-    let destructiveColor = Color(hex: "FF453A") // iOS system red
+    let destructiveColor = Color(hex: "FF453A")
 
     @Environment(\.presentationMode) var presentationMode
 
@@ -44,7 +29,6 @@ struct ProfileSettingsScreenView: View {
             screenBackgroundColor.ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // MARK: - Top Navigation Bar
                 HStack {
                     Button(action: {
                         presentationMode.wrappedValue.dismiss()
@@ -58,7 +42,7 @@ struct ProfileSettingsScreenView: View {
                         .font(.system(size: 20, weight: .bold))
                         .foregroundColor(mainTextColor)
                     Spacer()
-                    Image(systemName: "arrow.left").opacity(0) // Balance
+                    Image(systemName: "arrow.left").opacity(0)
                 }
                 .padding(.horizontal)
                 .padding(.top, 15)
@@ -66,7 +50,6 @@ struct ProfileSettingsScreenView: View {
 
                 ScrollView {
                     VStack(spacing: 25) {
-                        // MARK: - Profile Header
                         ProfileHeaderView(
                             imageName: userProfile.profileImageName,
                             userName: userProfile.fullName,
@@ -74,11 +57,9 @@ struct ProfileSettingsScreenView: View {
                             accentColor: accentColorTeal
                         ) {
                             print("Change profile picture tapped")
-                            // Action to change profile picture
                         }
                         .padding(.bottom, 10)
 
-                        // MARK: - Personal Information Section
                         ProfileSectionView(title: "Personal Information") {
                             NavigationLink(destination: EditInfoView_Placeholder(field: "Full Name", currentValue: $userProfile.fullName)) {
                                 ProfileDetailRow(iconName: "person.text.rectangle.fill", iconColor: accentColorTeal, label: "Full Name", value: userProfile.fullName)
@@ -91,17 +72,15 @@ struct ProfileSettingsScreenView: View {
                             }
                         }
 
-                        // MARK: - Account Management Section
                         ProfileSectionView(title: "Account Management") {
-                            NavigationLink(destination: ChangePasswordView_Placeholder()) { // Re-use from general settings if identical
+                            NavigationLink(destination: ChangePasswordView_Placeholder()) {
                                 ProfileDetailRow(iconName: "lock.shield.fill", iconColor: accentColorTeal, label: "Change Password")
                             }
-                             NavigationLink(destination: ManageSubscriptionView_Placeholder()) {
+                            NavigationLink(destination: ManageSubscriptionView_Placeholder()) {
                                 ProfileDetailRow(iconName: "creditcard.circle.fill", iconColor: accentColorTeal, label: "Manage Subscription")
                             }
                         }
-                        
-                        // MARK: - Security & Data
+
                         ProfileSectionView(title: "Security & Data") {
                             NavigationLink(destination: LoginActivityView_Placeholder()) {
                                 ProfileDetailRow(iconName: "list.star", iconColor: accentColorTeal, label: "Login Activity")
@@ -111,15 +90,12 @@ struct ProfileSettingsScreenView: View {
                             })
                         }
 
-
-                        // MARK: - Delete Account Section
-                        ProfileSectionView { // Section without a title for distinct actions
+                        ProfileSectionView {
                             ProfileDetailRow(iconName: "trash.fill", iconColor: destructiveColor, label: "Delete Account", labelColor: destructiveColor, action: {
                                 print("Delete Account tapped")
-                                // Show confirmation alert
                             })
                         }
-                        .padding(.top, 10) // Add some space before delete
+                        .padding(.top, 10)
 
                         Spacer(minLength: 20)
                     }
@@ -131,22 +107,19 @@ struct ProfileSettingsScreenView: View {
     }
 }
 
-// MARK: - Reusable Profile Components
-
 struct ProfileHeaderView: View {
     let imageName: String
     let userName: String
     let userEmail: String
     let accentColor: Color
     let onImageTap: () -> Void
-    
+
     let mainTextColor = Color.white
     let secondaryTextColor = Color(hex: "A0A0A0")
 
-
     var body: some View {
         VStack(spacing: 12) {
-            Image(imageName) // Assuming image is in assets
+            Image(imageName)
                 .resizable()
                 .aspectRatio(contentMode: .fill)
                 .frame(width: 100, height: 100)
@@ -157,8 +130,8 @@ struct ProfileHeaderView: View {
                         Image(systemName: "pencil.circle.fill")
                             .font(.system(size: 24))
                             .foregroundColor(accentColor)
-                            .background(Circle().fill(Color(red: 0.15, green: 0.16, blue: 0.18))) // Background for icon
-                            .offset(x: 5, y: 5) // Adjust offset as needed
+                            .background(Circle().fill(Color(red: 0.15, green: 0.16, blue: 0.18)))
+                            .offset(x: 5, y: 5)
                     }
                 }
                 .padding(.bottom, 5)
@@ -178,10 +151,9 @@ struct ProfileHeaderView: View {
 struct ProfileSectionView<Content: View>: View {
     let title: String?
     @ViewBuilder let content: Content
-    
+
     let sectionBackgroundColor = Color(red: 0.15, green: 0.16, blue: 0.18)
     let sectionHeaderColor = Color(hex: "A0A0A0")
-
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -192,7 +164,7 @@ struct ProfileSectionView<Content: View>: View {
                     .padding(.horizontal)
                     .padding(.bottom, 8)
             }
-            VStack(spacing: 1) { // Use 1 for a thin line effect if rows don't have their own bg
+            VStack(spacing: 1) {
                 content
             }
             .background(sectionBackgroundColor)
@@ -215,7 +187,6 @@ struct ProfileDetailRow: View {
     let value: String?
     let action: (() -> Void)?
 
-    // Initializer for rows with a value (often for NavigationLink content)
     init(iconName: String, iconColor: Color, label: String, labelColor: Color = .white, value: String) {
         self.iconName = iconName
         self.iconColor = iconColor
@@ -225,7 +196,6 @@ struct ProfileDetailRow: View {
         self.action = nil
     }
 
-    // Initializer for action rows or NavigationLinks without an explicit value shown
     init(iconName: String, iconColor: Color, label: String, labelColor: Color = .white, action: (() -> Void)? = nil) {
         self.iconName = iconName
         self.iconColor = iconColor
@@ -234,19 +204,18 @@ struct ProfileDetailRow: View {
         self.value = nil
         self.action = action
     }
-    
+
     let mainTextColor = Color.white
     let secondaryTextColor = Color(hex: "A0A0A0")
 
-
     var body: some View {
-        Group { // Use Group to allow conditional execution of action
+        Group {
             if let action = action {
                 Button(action: action) {
                     rowContent
                 }
             } else {
-                rowContent // For NavigationLink, the link itself provides action
+                rowContent
             }
         }
     }

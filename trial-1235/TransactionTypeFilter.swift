@@ -1,7 +1,4 @@
-// FilterModels.swift
-// Created by Smart-Rupay App (via AI)
-
-import Foundation // Or SwiftUI if needed, but Foundation is fine for these models
+import Foundation
 
 enum TransactionTypeFilter: String, CaseIterable, Identifiable, Hashable {
     case all = "All"
@@ -15,11 +12,10 @@ struct TransactionFilterCriteria: Equatable, Hashable {
     var startDate: Date? = nil
     var endDate: Date? = nil
     var transactionType: TransactionTypeFilter = .all
-    var selectedCategories: Set<String> = [] // Store names of selected categories
-    var minAmount: String = "" // Store as String for TextField, convert to Double for filtering
-    var maxAmount: String = "" // Store as String for TextField, convert to Double for filtering
+    var selectedCategories: Set<String> = []
+    var minAmount: String = ""
+    var maxAmount: String = ""
 
-    // Computed property to check if any filters are active
     var isActive: Bool {
         return startDate != nil || endDate != nil ||
                !selectedCategories.isEmpty ||
@@ -28,8 +24,6 @@ struct TransactionFilterCriteria: Equatable, Hashable {
                transactionType != .all ||
                !searchTerm.isEmpty
     }
-
-    // Make it Hashable if you plan to use it in ways that require it (e.g., certain SwiftUI views)
     // For Equatable, ensure all properties are compared.
     static func == (lhs: TransactionFilterCriteria, rhs: TransactionFilterCriteria) -> Bool {
         return lhs.searchTerm == rhs.searchTerm &&
