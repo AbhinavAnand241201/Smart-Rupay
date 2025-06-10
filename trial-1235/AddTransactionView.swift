@@ -1,4 +1,4 @@
-// In AddTransactionView.swift, replace the whole file content
+// In AddTransactionView.swift
 
 import SwiftUI
 
@@ -6,22 +6,34 @@ struct AddTransactionView: View {
     @EnvironmentObject var transactionStore: TransactionStore
     @Environment(\.dismiss) var dismiss
 
+    // This property holds the transaction we are editing.
+    // If it's nil, the view is in "Add New" mode.
+    var transactionToEdit: TransactionDetail?
+
+    // MARK: State Variables
     @State private var amountString: String = ""
     @State private var name: String = ""
-    @State private var category: TransactionCategory = .other // Default category
+    @State private var category: TransactionCategory = .other
     @State private var transactionType: TransactionType = .expense
     @State private var date: Date = Date()
     
-    // --- NEW: State for AI Suggestion ---
+    // State for AI Suggestion
     @State private var isSuggestingCategory = false
     @State private var showSuggestionAlert = false
     @State private var suggestedCategory: TransactionCategory?
 
+    // MARK: Computed Properties
     private var isFormValid: Bool {
         !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
         !amountString.isEmpty && Double(amountString) != nil
     }
+    
+    // The title changes depending on whether we are adding or editing.
+    private var navigationTitle: String {
+        transactionToEdit == nil ? "Add Transaction" : "Edit Transaction"
+    }
 
+    // MARK: Enums
     enum TransactionCategory: String, CaseIterable, Identifiable {
         case groceries, dining, transport, entertainment, shopping, utilities, salary, gifts, other
         var id: String { self.rawValue.capitalized }
@@ -32,6 +44,7 @@ struct AddTransactionView: View {
         case income = "Income"
     }
 
+    // MARK: Body
     var body: some View {
         NavigationView {
             ZStack {
@@ -59,12 +72,9 @@ struct AddTransactionView: View {
                     }
                     
                     Section(header: Text("Categorization").foregroundColor(.gray)) {
-                        // --- NEW: Suggestion Button ---
                         HStack {
                             Picker("Category", selection: $category) {
-                                ForEach(TransactionCategory.allCases) { category in
-                                    Text(category.id).tag(category)
-                                }
+                                ForEach(TransactionCategory.allCases) { Text($0.id).tag($0) }
                             }
                             
                             Spacer()
@@ -87,7 +97,7 @@ struct AddTransactionView: View {
                 }
                 .scrollContentBackground(.hidden)
             }
-            .navigationTitle("Add Transaction")
+            .navigationTitle(navigationTitle) // Use the dynamic title
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -99,20 +109,68 @@ struct AddTransactionView: View {
                         .disabled(!isFormValid)
                 }
             }
-            // --- NEW: Alert to show the suggestion ---
             .alert("AI Suggestion", isPresented: $showSuggestionAlert, presenting: suggestedCategory) { category in
-                Button("Use \"\(category.id)\"") {
-                    self.category = category
-                }
+                Button("Use \"\(category.id)\"") { self.category = category }
                 Button("Cancel", role: .cancel) {}
             } message: { category in
                 Text("Based on your transaction name, we suggest the category \"\(category.id)\".")
             }
             .preferredColorScheme(.dark)
+            .onAppear(perform: setupForEditing) // Pre-fill the form if editing
         }
     }
     
-    // --- NEW: Function to call the backend ---
+    // MARK: Functions
+    
+    /// Pre-fills the form fields if a transaction is passed in for editing.
+    private func setupForEditing() {
+        guard let transaction = transactionToEdit else { return }
+        
+        name = transaction.name
+        amountString = String(abs(transaction.amount))
+        transactionType = transaction.isCredit ? .income : .expense
+        date = transaction.date
+        if let matchedCategory = TransactionCategory(rawValue: transaction.category.lowercased()) {
+            category = matchedCategory
+        }
+    }
+
+    /// Handles both updating an existing transaction and adding a new one.
+    private func saveTransaction() {
+        guard let amount = Double(amountString) else { return }
+        let finalAmount = transactionType == .expense ? -abs(amount) : abs(amount)
+
+        // If transactionToEdit exists, we UPDATE it.
+        if let existingTransaction = transactionToEdit {
+            let updatedTransaction = TransactionDetail(
+                id: existingTransaction.id, // Keep the original ID
+                date: date,
+                iconName: categoryIcon(for: category),
+                iconBackgroundColorHex: "#2c2c2e",
+                name: name,
+                category: category.id,
+                amount: finalAmount
+            )
+            Task {
+                await transactionStore.updateTransaction(updatedTransaction)
+            }
+        // Otherwise, we ADD a new one.
+        } else {
+            let newTransaction = TransactionDetail(
+                id: UUID(), // Create a new ID
+                date: date,
+                iconName: categoryIcon(for: category),
+                iconBackgroundColorHex: "#2c2c2e",
+                name: name,
+                category: category.id,
+                amount: finalAmount
+            )
+            transactionStore.addTransaction(detail: newTransaction)
+        }
+        
+        dismiss()
+    }
+    
     private func fetchCategorySuggestion() {
         guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
         isSuggestingCategory = true
@@ -126,28 +184,9 @@ struct AddTransactionView: View {
                 }
             } catch {
                 print("Error fetching category suggestion: \(error)")
-                // Optionally show an error to the user
             }
             isSuggestingCategory = false
         }
-    }
-    
-    private func saveTransaction() {
-        guard let amount = Double(amountString) else { return }
-        let finalAmount = transactionType == .expense ? -abs(amount) : abs(amount)
-        
-        let newTransaction = TransactionDetail(
-            id: UUID(),
-            date: date,
-            iconName: categoryIcon(for: category),
-            iconBackgroundColorHex: "#2c2c2e",
-            name: name,
-            category: category.id,
-            amount: finalAmount
-        )
-        
-        transactionStore.addTransaction(detail: newTransaction)
-        dismiss()
     }
     
     private func categoryIcon(for category: TransactionCategory) -> String {
@@ -156,7 +195,6 @@ struct AddTransactionView: View {
         }
     }
 }
-// Preview provider for the new view
 struct AddTransactionView_Previews: PreviewProvider {
     static var previews: some View {
         AddTransactionView()

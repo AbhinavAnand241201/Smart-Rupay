@@ -17,6 +17,15 @@ struct AuthResponse: Decodable { let token: String }
 struct FulfillmentResponse: Decodable { let message: String; let subscribedUntil: Date }
 struct PaymentIntentResponse: Decodable { let clientSecret: String }
 
+// In NetworkService.swift
+
+// Add this struct for the update request
+struct TransactionUpdateRequest: Encodable {
+    let name: String
+    let category: String
+    let amount: Double
+    let date: Date
+}
 
 class NetworkService {
     static let shared = NetworkService()
@@ -33,6 +42,14 @@ class NetworkService {
         return try await executeRequest(for: request)
     }
 
+    
+    
+    
+    // Add this new function inside the NetworkService class
+    func updateTransaction(id: String, with data: TransactionUpdateRequest) async throws -> TransactionDetail {
+        let request = try createRequest(with: "/transactions/\(id)", method: "PATCH", body: data)
+        return try await executeRequest(for: request)
+    }
     private func createRequest(with endpoint: String, method: String, body: (any Encodable)? = nil) throws -> URLRequest {
         guard let url = URL(string: baseURL + endpoint) else { throw NetworkError.invalidURL }
         var request = URLRequest(url: url)

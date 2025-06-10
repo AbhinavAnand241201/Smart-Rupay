@@ -79,6 +79,39 @@ class TransactionStore: ObservableObject {
             print("Failed to load transactions, using sample data. Error: \(error)")
             self.transactions = Self.generateSampleTransactions()
         }
+        
+    }
+    
+
+
+    func updateTransaction(_ transaction: TransactionDetail) async {
+        guard let index = transactions.firstIndex(where: { $0.id == transaction.id }) else {
+            print("Error: Transaction to update not found in local store.")
+            return
+        }
+        
+        // Create the request body
+        let updateRequest = TransactionUpdateRequest(
+            name: transaction.name,
+            category: transaction.category,
+            amount: transaction.amount,
+            date: transaction.date
+        )
+        
+        do {
+            // Call the network service and get the updated transaction back from the server
+            let updatedFromServer = try await NetworkService.shared.updateTransaction(
+                id: transaction.id.uuidString, // Assuming IDs are UUIDs, convert to string
+                with: updateRequest
+            )
+            
+            // Update the local array on the main thread
+            await MainActor.run {
+                self.transactions[index] = updatedFromServer
+            }
+        } catch {
+            print("Failed to update transaction: \(error.localizedDescription)")
+        }
     }
     
     static func generateSampleTransactions() -> [TransactionDetail] {
@@ -96,3 +129,7 @@ class TransactionStore: ObservableObject {
         return transactions.sorted(by: { $0.date > $1.date })
     }
 }
+
+
+
+
