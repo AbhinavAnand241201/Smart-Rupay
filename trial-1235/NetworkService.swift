@@ -17,10 +17,21 @@ struct AuthResponse: Decodable { let token: String }
 struct FulfillmentResponse: Decodable { let message: String; let subscribedUntil: Date }
 struct PaymentIntentResponse: Decodable { let clientSecret: String }
 
+
 class NetworkService {
     static let shared = NetworkService()
     private let baseURL = "http://localhost:3000/api"
     var authToken: String?
+    
+    struct CategorySuggestionRequest: Encodable { let transactionName: String }
+    struct CategorySuggestionResponse: Decodable { let category: String }
+
+   
+    func suggestCategory(for transactionName: String) async throws -> CategorySuggestionResponse {
+        let requestBody = CategorySuggestionRequest(transactionName: transactionName)
+        let request = try createRequest(with: "/suggest-category", method: "POST", body: requestBody)
+        return try await executeRequest(for: request)
+    }
 
     private func createRequest(with endpoint: String, method: String, body: (any Encodable)? = nil) throws -> URLRequest {
         guard let url = URL(string: baseURL + endpoint) else { throw NetworkError.invalidURL }

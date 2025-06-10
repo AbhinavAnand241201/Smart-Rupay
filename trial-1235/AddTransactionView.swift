@@ -1,4 +1,4 @@
-
+// In AddTransactionView.swift, replace the whole file content
 
 import SwiftUI
 
@@ -8,12 +8,18 @@ struct AddTransactionView: View {
 
     @State private var amountString: String = ""
     @State private var name: String = ""
-    @State private var category: TransactionCategory = .groceries
+    @State private var category: TransactionCategory = .other // Default category
     @State private var transactionType: TransactionType = .expense
     @State private var date: Date = Date()
     
+    // --- NEW: State for AI Suggestion ---
+    @State private var isSuggestingCategory = false
+    @State private var showSuggestionAlert = false
+    @State private var suggestedCategory: TransactionCategory?
+
     private var isFormValid: Bool {
-        !name.isEmpty && !amountString.isEmpty && Double(amountString) != nil
+        !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+        !amountString.isEmpty && Double(amountString) != nil
     }
 
     enum TransactionCategory: String, CaseIterable, Identifiable {
@@ -33,20 +39,14 @@ struct AddTransactionView: View {
                 
                 Form {
                     Section(header: Text("Details").foregroundColor(.gray)) {
-                        // Picker for Income/Expense
                         Picker("Type", selection: $transactionType) {
-                            ForEach(TransactionType.allCases, id: \.self) {
-                                Text($0.rawValue)
-                            }
+                            ForEach(TransactionType.allCases, id: \.self) { Text($0.rawValue) }
                         }
                         .pickerStyle(.segmented)
                         .listRowBackground(Color(red: 0.15, green: 0.16, blue: 0.18))
                         
-                        // Amount Text Field
                         HStack {
-                            Text("₹")
-                                .font(.title2)
-                                .foregroundColor(.gray)
+                            Text("₹").font(.title2).foregroundColor(.gray)
                             TextField("0.00", text: $amountString)
                                 .font(.system(size: 28, weight: .bold))
                                 .keyboardType(.decimalPad)
@@ -54,21 +54,33 @@ struct AddTransactionView: View {
                         }
                         .listRowBackground(Color(red: 0.15, green: 0.16, blue: 0.18))
                         
-                        // Transaction Name
                         TextField("Transaction Name (e.g., Coffee, Salary)", text: $name)
                             .listRowBackground(Color(red: 0.15, green: 0.16, blue: 0.18))
                     }
                     
                     Section(header: Text("Categorization").foregroundColor(.gray)) {
-                        // Category Picker
-                        Picker("Category", selection: $category) {
-                            ForEach(TransactionCategory.allCases) { category in
-                                Text(category.id).tag(category)
+                        // --- NEW: Suggestion Button ---
+                        HStack {
+                            Picker("Category", selection: $category) {
+                                ForEach(TransactionCategory.allCases) { category in
+                                    Text(category.id).tag(category)
+                                }
                             }
+                            
+                            Spacer()
+                            
+                            Button(action: fetchCategorySuggestion) {
+                                if isSuggestingCategory {
+                                    ProgressView()
+                                } else {
+                                    Image(systemName: "sparkles")
+                                        .foregroundColor(Color(hex: "3AD7D5"))
+                                }
+                            }
+                            .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                         }
                         .listRowBackground(Color(red: 0.15, green: 0.16, blue: 0.18))
                         
-                        // Date Picker
                         DatePicker("Date", selection: $date, displayedComponents: .date)
                             .listRowBackground(Color(red: 0.15, green: 0.16, blue: 0.18))
                     }
@@ -79,64 +91,71 @@ struct AddTransactionView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                    .tint(Color(hex: "3AD7D5"))
+                    Button("Cancel") { dismiss() }.tint(Color(hex: "3AD7D5"))
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Save") {
-                        saveTransaction()
-                    }
-                    .tint(Color(hex: "3AD7D5"))
-                    .disabled(!isFormValid)
+                    Button("Save") { saveTransaction() }
+                        .tint(Color(hex: "3AD7D5"))
+                        .disabled(!isFormValid)
                 }
+            }
+            // --- NEW: Alert to show the suggestion ---
+            .alert("AI Suggestion", isPresented: $showSuggestionAlert, presenting: suggestedCategory) { category in
+                Button("Use \"\(category.id)\"") {
+                    self.category = category
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: { category in
+                Text("Based on your transaction name, we suggest the category \"\(category.id)\".")
             }
             .preferredColorScheme(.dark)
         }
     }
     
-    // In AddTransactionView.swift
-
+    // --- NEW: Function to call the backend ---
+    private func fetchCategorySuggestion() {
+        guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        isSuggestingCategory = true
+        
+        Task {
+            do {
+                let response = try await NetworkService.shared.suggestCategory(for: name)
+                if let matchedCategory = TransactionCategory(rawValue: response.category) {
+                    self.suggestedCategory = matchedCategory
+                    self.showSuggestionAlert = true
+                }
+            } catch {
+                print("Error fetching category suggestion: \(error)")
+                // Optionally show an error to the user
+            }
+            isSuggestingCategory = false
+        }
+    }
+    
     private func saveTransaction() {
         guard let amount = Double(amountString) else { return }
-        
-        // This correctly sets the amount to be negative for an expense
         let finalAmount = transactionType == .expense ? -abs(amount) : abs(amount)
         
         let newTransaction = TransactionDetail(
             id: UUID(),
             date: date,
             iconName: categoryIcon(for: category),
-            iconBackgroundColorHex: "#2c2c2e", // Default background color
+            iconBackgroundColorHex: "#2c2c2e",
             name: name,
-            category: category.rawValue.capitalized,
+            category: category.id,
             amount: finalAmount
-            // FIXED: The `isCredit` argument has been removed. It will be computed automatically.
         )
         
-        // Add the new transaction to the central store
         transactionStore.addTransaction(detail: newTransaction)
-        
-        // Close the sheet
         dismiss()
     }
-    // Helper to return an icon based on the category
+    
     private func categoryIcon(for category: TransactionCategory) -> String {
         switch category {
-        case .groceries: return "cart.fill"
-        case .dining: return "fork.knife"
-        case .transport: return "car.fill"
-        case .entertainment: return "film.fill"
-        case .shopping: return "bag.fill"
-        case .utilities: return "lightbulb.fill"
-        case .salary: return "dollarsign.circle.fill"
-        case .gifts: return "gift.fill"
-        case .other: return "tag.fill"
+        case .groceries: "cart.fill"; case .dining: "fork.knife"; case .transport: "car.fill"; case .entertainment: "film.fill"; case .shopping: "bag.fill"; case .utilities: "lightbulb.fill"; case .salary: "dollarsign.circle.fill"; case .gifts: "gift.fill"; default: "tag.fill"
         }
     }
 }
-
 // Preview provider for the new view
 struct AddTransactionView_Previews: PreviewProvider {
     static var previews: some View {
