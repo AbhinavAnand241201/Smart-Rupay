@@ -1,8 +1,6 @@
 import SwiftUI
 
-// This is the main view for the Budgets screen.
 struct BudgetsScreenView: View {
-    // FIXED: Use @StateObject to create and keep the ViewModel alive.
     @StateObject private var viewModel = BudgetViewModel()
     @State private var isPresentingAddSheet = false
 
@@ -12,8 +10,6 @@ struct BudgetsScreenView: View {
                 Color(red: 0.08, green: 0.09, blue: 0.10).ignoresSafeArea()
 
                 VStack(alignment: .leading, spacing: 0) {
-                    // This list now correctly iterates over the @Published array in the ViewModel.
-                    // This fixes the "subscript requires wrapper" error.
                     List {
                         ForEach(viewModel.budgets) { budget in
                             BudgetCategoryRow(item: budget)
@@ -56,7 +52,6 @@ struct BudgetsScreenView: View {
     }
 }
 
-// FIXED: This row view now correctly uses the `BudgetItem` model from the ViewModel.
 struct BudgetCategoryRow: View {
     let item: BudgetItem
 
@@ -105,7 +100,6 @@ struct BudgetsScreenView_Previews: PreviewProvider {
     }
 }
 
-// Your Color extension remains necessary here.
 extension Color {
     init(hex: String) {
         let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)

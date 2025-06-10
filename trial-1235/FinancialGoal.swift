@@ -1,12 +1,4 @@
-//
-//  FinancialGoal.swift
-//  trial-1235
-//
-//  Created by ABHINAV ANAND  on 03/06/25.
-//
 
-
-// FinancialGoal.swift
 
 import SwiftUI
 

@@ -1,12 +1,3 @@
-//
-//  BillManager.swift
-//  trial-1235
-//
-//  Created by ABHINAV ANAND  on 06/06/25.
-//
-
-
-// File: ViewModels/BillManager.swift
 
 import Foundation
 import UserNotifications
@@ -18,13 +9,11 @@ class BillManager: ObservableObject {
     @Published var urgentBill: BillItem? = nil
 
     init() {
-        // Load saved bills and check for urgent ones on startup
         loadBills()
         checkForUrgentBills()
     }
 
     func checkForUrgentBills() {
-        // Find the first bill that is urgent
         self.urgentBill = bills.first(where: { $0.isUrgent })
     }
     
@@ -77,7 +66,6 @@ class BillManager: ObservableObject {
         UNUserNotificationCenter.current().add(request)
     }
 
-    // --- DATA PERSISTENCE (Example using UserDefaults) ---
     func saveBills() {
         if let encodedData = try? JSONEncoder().encode(bills) {
             UserDefaults.standard.set(encodedData, forKey: "userBills")

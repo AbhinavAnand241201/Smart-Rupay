@@ -183,7 +183,7 @@ class RecurringPaymentsViewModel: ObservableObject {
         self.recurringPayments = sampleData
         self.nextVisualIndex = sampleData.count % itemVisuals.count
         
-        // Ensure all nextDueDates are correctly calculated after loading samples
+      
         for i in recurringPayments.indices {
             recurringPayments[i].nextDueDate = RecurringPayment.calculateCorrectNextDueDate(
                 from: recurringPayments[i].startDate,

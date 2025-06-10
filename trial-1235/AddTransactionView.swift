@@ -1,39 +1,26 @@
-//
-//  AddTransactionView.swift
-//  trial-1235
-//
-//  Created by ABHINAV ANAND  on 08/06/25.
-//
 
 
 import SwiftUI
 
-// This view allows the user to add a new transaction.
 struct AddTransactionView: View {
-    // Access to the central data store to save the transaction
     @EnvironmentObject var transactionStore: TransactionStore
-    // A way to close the sheet
     @Environment(\.dismiss) var dismiss
 
-    // State for all the input fields
     @State private var amountString: String = ""
     @State private var name: String = ""
     @State private var category: TransactionCategory = .groceries
     @State private var transactionType: TransactionType = .expense
     @State private var date: Date = Date()
     
-    // Simple validation to enable the Save button
     private var isFormValid: Bool {
         !name.isEmpty && !amountString.isEmpty && Double(amountString) != nil
     }
 
-    // A list of categories for the user to choose from
     enum TransactionCategory: String, CaseIterable, Identifiable {
         case groceries, dining, transport, entertainment, shopping, utilities, salary, gifts, other
         var id: String { self.rawValue.capitalized }
     }
     
-    // Enum to define if the transaction is income or an expense
     enum TransactionType: String, CaseIterable {
         case expense = "Expense"
         case income = "Income"

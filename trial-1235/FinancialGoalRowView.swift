@@ -1,12 +1,3 @@
-//
-//  FinancialGoalRowView.swift
-//  trial-1235
-//
-//  Created by ABHINAV ANAND  on 03/06/25.
-//
-
-
-// FinancialGoalsScreen.swift
 
 import SwiftUI
 
@@ -17,7 +8,6 @@ struct FinancialGoalRowView: View {
     let cardBackgroundColor = Color(red: 0.15, green: 0.16, blue: 0.18)
     let mainTextColor = Color.white
     let secondaryTextColor = Color(hex: "A0A0A0")
-    // Goal's accentColor will be used for progress bar and icon
 
     var body: some View {
         HStack(spacing: 15) {
@@ -76,11 +66,9 @@ struct FinancialGoalRowView: View {
         .cornerRadius(12)
     }
 }
-// In FinancialGoalsScreen.swift (or FinancialGoalRowView.swift)
 
 
 struct FinancialGoalsListView: View {
-    // This creates and keeps the ViewModel alive for this view and its children.
     @StateObject private var viewModel = FinancialGoalsViewModel()
     @State private var showingAddGoalView = false
 
@@ -89,7 +77,6 @@ struct FinancialGoalsListView: View {
             ZStack {
                 Color(red: 0.08, green: 0.09, blue: 0.10).ignoresSafeArea()
 
-                // FIXED: Main content is now inside a ZStack to allow overlaying a loading spinner.
                 VStack {
                     if viewModel.isLoading {
                         Spacer()
@@ -147,11 +134,9 @@ struct FinancialGoalsListView: View {
                 }
             }
             .sheet(isPresented: $showingAddGoalView) {
-                // FIXED: Pass the viewModel to the sheet's environment for cleaner access.
                 AddFinancialGoalView()
                     .environmentObject(viewModel)
             }
-            // FIXED: This task runs when the view first appears to fetch data from the server.
             .task {
                 await viewModel.fetchGoals()
             }
@@ -159,7 +144,6 @@ struct FinancialGoalsListView: View {
         .preferredColorScheme(.dark)
     }
     
-    // A reusable view for the empty state
     private var emptyStateView: some View {
         VStack(spacing: 15) {
             Spacer()
@@ -179,7 +163,6 @@ struct FinancialGoalsListView: View {
         }
     }
 }
-// MARK: - Preview
 struct FinancialGoalsListView_Previews: PreviewProvider {
     static var previews: some View {
         FinancialGoalsListView()

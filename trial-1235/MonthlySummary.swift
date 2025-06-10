@@ -1,9 +1,7 @@
 import SwiftUI
 import Charts // Ensure Charts is imported
 //trying to resolve some issues here , will do it tmr.
-// Assume Color(hex: String) extension is globally available.
 
-// MARK: - Data Models for Analysis (same as before)
 struct MonthlySummary: Identifiable {
     let id = UUID()
     let month: String
@@ -39,7 +37,6 @@ enum AnalysisPeriod: String, CaseIterable, Identifiable {
 struct SpendingAnalysisScreenView: View {
     @State private var selectedPeriod: AnalysisPeriod = .currentMonth
 
-    // MARK: - UI Colors
     let screenBackgroundColor = Color(red: 0.08, green: 0.09, blue: 0.10)
     let cardBackgroundColor = Color(red: 0.15, green: 0.16, blue: 0.18)
     let mainTextColor = Color.white
@@ -107,11 +104,9 @@ struct SpendingAnalysisScreenView: View {
                 .pickerStyle(SegmentedPickerStyle())
                 .padding(.horizontal)
                 .padding(.bottom, 20)
-                // TODO: Implement data filtering based on selectedPeriod
 
                 ScrollView {
                     VStack(spacing: 25) {
-                        // MARK: - Income vs Expenses Chart
                         AnalysisCardView(title: "Income vs Expenses") {
                             if let currentSummary = monthlySummaryData.first {
                                 Chart {
@@ -122,7 +117,6 @@ struct SpendingAnalysisScreenView: View {
                                         .foregroundStyle(categoryColors[1]) // Orange for expenses
                                         .cornerRadius(6)
                                 }
-                                // **FIXED AXIS STYLING HERE**
                                 .chartYAxis {
                                     AxisMarks(preset: .automatic, position: .leading) { value in
                                         AxisGridLine().foregroundStyle(secondaryTextColor.opacity(0.3))
@@ -155,7 +149,6 @@ struct SpendingAnalysisScreenView: View {
                             }
                         }
 
-                        // MARK: - Spending Categories Donut Chart
                         AnalysisCardView(title: "Spending by Category") {
                             HStack(spacing: 15) {
                                 Chart(categorySpendingData) { data in
@@ -222,7 +215,6 @@ struct SpendingAnalysisScreenView: View {
     }
 }
 
-// MARK: - Reusable Analysis Card View (same as before)
 struct AnalysisCardView<Content: View>: View {
     let title: String
     @ViewBuilder let content: Content
@@ -246,7 +238,6 @@ struct AnalysisCardView<Content: View>: View {
     }
 }
 
-// MARK: - Preview
 struct SpendingAnalysisScreenView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationView {

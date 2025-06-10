@@ -175,21 +175,25 @@ class RupayOracleViewModel: ObservableObject {
 }
 
 
+
+
+// PASTE THIS AT THE BOTTOM OF RupayOracleViewModel.swift
+
 extension Color {
     func toHex() -> String? {
         let uic = UIColor(self)
         guard let components = uic.cgColor.components, components.count >= 3 else {
-            // Attempt to handle system colors like .blue, .green which might not have direct RGB components this way
-    
+            // Handle system colors that don't have direct RGB components
             if uic == UIColor.blue { return "007AFF" }
             if uic == UIColor.green { return "34C759" }
             if uic == UIColor.orange { return "FF9500" }
+            if uic == UIColor.purple { return "AF52DE" }
+//            if uic == UIColor.pink { return "FF2D55" }
             return nil
         }
         let r = Int(components[0] * 255.0)
         let g = Int(components[1] * 255.0)
         let b = Int(components[2] * 255.0)
-        // let a = components.count >= 4 ? Int(components[3] * 255.0) : 255 // Alpha
         return String(format: "%02X%02X%02X", r, g, b)
     }
 }

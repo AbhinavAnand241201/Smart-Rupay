@@ -1,5 +1,4 @@
-// Badge.swift
-// Smart-Rupay App
+
 
 import SwiftUI
 
@@ -13,7 +12,6 @@ struct Badge: Identifiable, Hashable {
     var isAchieved: Bool = false
     var achievedDate: Date? = nil
 
-    // Conformance for Hashable
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }

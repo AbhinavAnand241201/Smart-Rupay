@@ -1,15 +1,8 @@
-//
-//  BudgetItem.swift
-//  trial-1235
-//
-//  Created by ABHINAV ANAND  on 08/06/25.
-//
 
 
 import SwiftUI
 import Combine
 
-// The new data model for a single budget category. It's Codable so it can be saved.
 struct BudgetItem: Identifiable, Codable, Hashable {
     let id: UUID
     var name: String
@@ -17,7 +10,6 @@ struct BudgetItem: Identifiable, Codable, Hashable {
     var iconName: String
     var colorHex: String
     
-    // This will be used later to track spending against the budget
     var spentAmount: Double = 0.0
     
     var progress: Double {
@@ -34,7 +26,6 @@ struct BudgetItem: Identifiable, Codable, Hashable {
     }
 }
 
-// The ViewModel to manage all budget-related logic
 @MainActor
 class BudgetViewModel: ObservableObject {
     @Published var budgets: [BudgetItem] = []

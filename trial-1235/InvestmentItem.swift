@@ -1,15 +1,9 @@
-//
-//  InvestmentItem.swift
-//  trial-1235
-//
-//  Created by ABHINAV ANAND  on 02/06/25.
-//
+
 
 
 import SwiftUI
 
 
-// MARK: - Data Models for Investments Screen
 struct InvestmentItem: Identifiable {
     let id = UUID()
     let iconName: String // SF Symbol name for the placeholder logo
@@ -25,11 +19,11 @@ enum InvestmentSegment: String, CaseIterable {
     case sips = "SIPs"
 }
 
-// MARK: - Main Investments Screen View
+
 struct InvestmentsScreenView: View {
     @State private var selectedSegment: InvestmentSegment = .stocks
 
-    // Sample Data for Stocks
+
     let stockItems: [InvestmentItem] = [
         InvestmentItem(iconName: "chart.bar.fill", iconBackgroundColor: Color(hex: "2A4D4E"), companyName: "TechCorp", sharesDetail: "10 Shares", amountChange: 250.00),
         InvestmentItem(iconName: "leaf.fill", iconBackgroundColor: Color(hex: "385E4F"), companyName: "GlobalEnergy", sharesDetail: "5 Shares", amountChange: -100.00),
@@ -37,7 +31,6 @@ struct InvestmentsScreenView: View {
         InvestmentItem(iconName: "cart.fill", iconBackgroundColor: Color(hex: "2F5656"), companyName: "RetailGiant", sharesDetail: "15 Shares", amountChange: 150.00)
     ]
     
-    // Placeholder for SIPs data
     let sipItems: [InvestmentItem] = [] // Populate this if SIPs data is available
 
     // Colors
@@ -208,9 +201,7 @@ struct InvestmentRowView: View {
 }
 
 
-// MARK: - Tab Bar Definitions (Adapted from AppCustomTabBar)
 
-// Define the tabs including "Investments"
 enum MainAppScreenTab: String, CaseIterable {
     case home = "house.fill"
     case aiAdvisor = "brain.head.profile" // Or "bubble.left.and.bubble.right.fill"
@@ -229,7 +220,6 @@ enum MainAppScreenTab: String, CaseIterable {
     }
 }
 
-// Reusable Custom Tab Bar
 struct AppMainTabBarView: View {
     @Binding var selectedTab: MainAppScreenTab
     private let tabBarHeight: CGFloat = 65
@@ -267,11 +257,9 @@ struct AppMainTabBarView: View {
             .compactMap { $0 as? UIWindowScene }
             .first?.windows.first?.safeAreaInsets.bottom ?? 0 > 0 ? 10 : 5) // Adjust padding for home indicator
         .background(tabBarBackgroundColor)
-        // .cornerRadius(16, corners: [.topLeft, .topRight]) // Optional: if you want rounded top corners for the tab bar
     }
 }
 
-// MARK: - Main Application View with TabBar
 struct MainAppInvestmentView: View {
     @State private var selectedTab: MainAppScreenTab = .investments // Default to investments
 
@@ -314,16 +302,11 @@ struct MainAppInvestmentView: View {
 }
 
 
-// MARK: - Preview
 struct InvestmentsScreenView_Previews: PreviewProvider {
     static var previews: some View {
-        // Preview the full tabbed interface with Investments selected
         MainAppInvestmentView()
 
-        // Preview just the InvestmentsScreenView in isolation (optional)
-        // InvestmentsScreenView()
-        //    .preferredColorScheme(.dark)
-        //    .background(Color(red: 0.08, green: 0.09, blue: 0.10).ignoresSafeArea())
+     
     }
 }
 

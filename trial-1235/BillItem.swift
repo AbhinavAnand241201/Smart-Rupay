@@ -1,12 +1,4 @@
-//
-//  BillItem.swift
-//  trial-1235
-//
-//  Created by ABHINAV ANAND  on 06/06/25.
-//
 
-
-// File: Models/BillItem.swift
 
 import Foundation
 
@@ -19,7 +11,6 @@ struct BillItem: Identifiable, Codable {
     var paymentURL: String? // Optional: for a "Pay Now" button
     var isPaid: Bool = false
     
-    // A computed property to check if the bill is due soon
     var isUrgent: Bool {
         // Due within the next 24 hours and not yet paid
         return !isPaid && dueDate > Date() && dueDate < Date().addingTimeInterval(24 * 60 * 60)

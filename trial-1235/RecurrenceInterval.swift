@@ -1,5 +1,9 @@
 import SwiftUI
 
+
+
+
+// The enum is now in the same file as the struct that uses it.
 enum RecurrenceInterval: String, CaseIterable, Codable, Hashable, Identifiable {
     case daily = "Daily"
     case weekly = "Weekly"
@@ -7,6 +11,7 @@ enum RecurrenceInterval: String, CaseIterable, Codable, Hashable, Identifiable {
     case yearly = "Yearly"
     var id: String { self.rawValue }
 }
+
 
 struct RecurringPayment: Identifiable, Codable, Hashable {
     let id: UUID

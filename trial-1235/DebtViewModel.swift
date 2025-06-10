@@ -1,4 +1,4 @@
-// File: ViewModels/DebtViewModel.swift
+
 
 import Foundation
 import SwiftUI
@@ -10,7 +10,6 @@ class DebtViewModel: ObservableObject {
     @Published var strategy: PayoffStrategy = .snowball
     @Published var monthlyExtraPaymentString: String = "0"
     
-    // MARK: - Data Persistence
         private let debtsSaveKey = "UserDebtItems"
 
         private func saveDebts() {
@@ -24,9 +23,6 @@ class DebtViewModel: ObservableObject {
 
         private func loadDebts() {
             guard let data = UserDefaults.standard.data(forKey: debtsSaveKey) else {
-                // If no saved data, you can start with an empty list
-                // or generate sample data for the very first launch.
-                // For now, we'll start empty.
                 self.debtItems = []
                 return
             }
@@ -55,7 +51,6 @@ class DebtViewModel: ObservableObject {
 //        ]
 //    }
     
-    // What to change
         init() {
             loadDebts()
         }
@@ -106,7 +101,6 @@ class DebtViewModel: ObservableObject {
 
         var months = 0
         var totalInterestPaid = 0.0
-        // **FIXED HERE**: Variable name corrected from 'total snowballPayment'
         var totalSnowballPayment = self.monthlyExtraPayment
 
         while !tempDebts.isEmpty {
@@ -127,18 +121,14 @@ class DebtViewModel: ObservableObject {
                 tempDebts[i].remainingBalance -= tempDebts[i].minimumPayment
             }
             
-            // 3. Apply snowball to the target debt
             let sortedForPayment = strategy == .snowball ? tempDebts.sorted { $0.remainingBalance < $1.remainingBalance } : tempDebts.sorted { $0.interestRate > $1.interestRate }
             
             if let targetDebt = sortedForPayment.first, let targetIndex = tempDebts.firstIndex(where: { $0.id == targetDebt.id }) {
-                 // **FIXED HERE**: Variable name corrected
                 tempDebts[targetIndex].remainingBalance -= totalSnowballPayment
             }
 
-            // 4. Check for paid off debts and add their min payment to the snowball
             let paidOffDebts = tempDebts.filter { $0.isPaidOff }
             for debt in paidOffDebts {
-                // **FIXED HERE**: Variable name corrected
                 totalSnowballPayment += debt.minimumPayment
             }
             tempDebts.removeAll { $0.isPaidOff }
@@ -148,7 +138,6 @@ class DebtViewModel: ObservableObject {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMMM yyyy"
         
-        // This is a simplified interest saved calculation for demonstration
         let simplifiedOriginalInterest = (totalOutstandingDebt * 0.15 * (Double(months)/12.0))
         let interestSaved = simplifiedOriginalInterest - totalInterestPaid
         

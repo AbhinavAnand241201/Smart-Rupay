@@ -1,6 +1,3 @@
-// File: Views/DebtDashboardView.swift
-// CORRECTED: This file no longer assumes or needs a local color extension.
-// It relies on the global init(hex:) from your BudgetCategoryItem.swift file.
 
 import SwiftUI
 
@@ -13,7 +10,6 @@ struct DebtDashboardView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                // CHANGED: Using direct hex color to match your project style
                 Color(hex: "#151618").ignoresSafeArea()
                 
                 List {
@@ -51,7 +47,6 @@ struct DebtDashboardView: View {
                     viewModel.addDebt(debt)
                 }
             }
-            // CHANGED: Using direct hex color
             .accentColor(Color(hex: "#3AD7D5"))
         }
     }

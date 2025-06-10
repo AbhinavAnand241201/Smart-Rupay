@@ -1,17 +1,4 @@
-//
-//  FinancialPlanView.swift
-//  trial-1235
-//
-//  Created by ABHINAV ANAND  on 07/06/25.
-//
 
-
-//
-//  FinancialPlanView.swift (previously OracleResponseView.swift)
-//  trial-1235
-//
-//  Created by Gemini AI on 07/06/25.
-//
 
 import SwiftUI
 import Charts
@@ -75,7 +62,7 @@ struct FinancialPlanView: View {
     }
 }
 
-// MARK: - Subviews for FinancialPlanView
+
 struct PlanSectionCard: View {
     let plan: PlanSection
     let accentColor: Color
@@ -161,21 +148,17 @@ struct BudgetPlanCard: View {
 
 
 
-// MARK: - Preview
 #Preview {
-    // 1. Create sample data for the preview
     let sampleBudgetPlan = BudgetPlanSection(
         title: "Budget Allocation",
         iconName: "chart.pie.fill",
         summary: "The 50/30/20 rule is a popular framework for managing money. It divides your after-tax income into three categories.",
-        // --- START: CORRECTED CODE ---
-        // Using `colorHex:` with a String value, instead of `color:`
+      
         allocations: [
-            .init(category: "Needs", percentage: 0.5, amount: 2500, colorHex: "#007AFF"),      // Corrected from .blue
-            .init(category: "Wants", percentage: 0.3, amount: 1500, colorHex: "#FF9500"),      // Corrected from .orange
-            .init(category: "Savings", percentage: 0.2, amount: 1000, colorHex: "#34C759")       // Corrected from .green
+            .init(category: "Needs", percentage: 0.5, amount: 2500, colorHex: "#007AFF"),      
+            .init(category: "Wants", percentage: 0.3, amount: 1500, colorHex: "#FF9500"),    
+            .init(category: "Savings", percentage: 0.2, amount: 1000, colorHex: "#34C759")      
         ]
-        // --- END: CORRECTED CODE ---
     )
 
     let sampleEmergencyPlan = PlanSection(
@@ -206,7 +189,6 @@ struct BudgetPlanCard: View {
         longTermGoalSuggestion: sampleGoalPlan
     )
 
-    // This part is now correct because samplePlan uses the right data types
     FinancialPlanView(plan: samplePlan, onDismiss: {
         print("Preview dismiss tapped.")
     })

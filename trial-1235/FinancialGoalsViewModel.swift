@@ -4,16 +4,12 @@ import SwiftUI
 class FinancialGoalsViewModel: ObservableObject {
     @Published var goals: [FinancialGoal] = []
     
-    // These properties help you show loading indicators or alerts in your views.
     @Published var isLoading = false
     @Published var errorMessage: String?
 
-    // The init is now empty; data is fetched by the view when it appears.
     init() {}
     
-    // MARK: - API Communication Methods
 
-    /// Fetches all goals for the logged-in user from the server.
     func fetchGoals() async {
         isLoading = true
         errorMessage = nil
@@ -27,7 +23,6 @@ class FinancialGoalsViewModel: ObservableObject {
         isLoading = false
     }
 
-    /// Sends a new goal to the server and adds the saved result to the list.
     func addGoal(name: String, targetAmount: Double, currentAmount: Double, deadline: Date?) async {
         isLoading = true
         errorMessage = nil
@@ -45,7 +40,6 @@ class FinancialGoalsViewModel: ObservableObject {
         isLoading = false
     }
     
-    /// Sends a request to the server to add a contribution to a specific goal.
     func contributeToGoal(goal: FinancialGoal, amount: Double) async {
         let goalIdAsString = goal.id.uuidString
         let body = ContributionRequestBody(amount: amount)

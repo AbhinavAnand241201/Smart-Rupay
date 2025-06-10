@@ -1,5 +1,3 @@
-// AdvancedFilterView.swift
-// Created by Smart-Rupay App (via AI) - Fully Revised with Header Fix
 
 import SwiftUI
 
@@ -15,11 +13,10 @@ struct AdvancedFilterView: View {
         "Education", "Gifts", "Other Income", "Other Expense"
     ].sorted()
 
-    // MARK: - UI Colors
+    
     let screenBackgroundColor = Color(red: 0.08, green: 0.09, blue: 0.10)
     let cardBackgroundColor = Color(red: 0.15, green: 0.16, blue: 0.18)
     let mainTextColor = Color.white
-    // Using a slightly brighter gray for headers, or ensure A0A0A0 is light enough.
     let headerTextColor = Color(hex: "BEBEBE") // Brighter Gray for headers
     let secondaryTextColor = Color(hex: "A0A0A0")
     let accentColorTeal = Color(hex: "3AD7D5")
@@ -151,13 +148,11 @@ struct AdvancedFilterView: View {
                     .fontWeight(.bold)
                 }
             }
-            // .preferredColorScheme(.dark) // Already set on NavigationView by sheet presentation context
         }
         .preferredColorScheme(.dark) // Apply to NavigationView
     }
 }
 
-// MultiSelectPickerView remains the same
 struct MultiSelectPickerView: View {
     let title: String
     let allItems: [String]

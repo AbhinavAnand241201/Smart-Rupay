@@ -3,7 +3,7 @@ import SwiftUI
 struct AddFinancialGoalView: View {
     @Environment(\.dismiss) var dismiss
     
-    // FIXED: Using @EnvironmentObject is cleaner than passing the viewModel in the initializer.
+  
     @EnvironmentObject var viewModel: FinancialGoalsViewModel
 
     @State private var goalName: String = ""
@@ -80,7 +80,7 @@ struct AddFinancialGoalView: View {
         guard let targetAmount = Double(targetAmountString),
               let currentAmount = Double(currentAmountString) else { return }
         
-        // FIXED: Wrap the call in a Task to run the async function.
+       
         Task {
             await viewModel.addGoal(
                 name: goalName.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -88,7 +88,7 @@ struct AddFinancialGoalView: View {
                 currentAmount: currentAmount,
                 deadline: hasDeadline ? deadline : nil
             )
-            // Only dismiss if the operation was successful (no error message was set)
+          
             if viewModel.errorMessage == nil {
                 dismiss()
             }

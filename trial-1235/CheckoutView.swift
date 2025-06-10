@@ -2,6 +2,7 @@ import SwiftUI
 
 struct CheckoutView: View {
     let plan: MembershipPlan
+    // This expects the ViewModel to be in the environment.
     @EnvironmentObject var viewModel: SubscriptionViewModel
     @Environment(\.dismiss) var dismiss
     
@@ -20,7 +21,7 @@ struct CheckoutView: View {
                             Text("You have selected the \(plan.name) plan. You will be billed ₹\(Int(plan.price)) \(plan.pricePeriod).")
                                 .foregroundColor(.gray)
                         }
-                        .padding().background(.ultraThinMaterial.opacity(0.4)).cornerRadius(16)
+                        .padding().background(Material.ultraThinMaterial.opacity(0.4)).cornerRadius(16)
                         
                         VStack(alignment: .leading, spacing: 15) {
                             Text("Choose Payment Method").font(.title2).bold()
@@ -40,8 +41,6 @@ struct CheckoutView: View {
                         Text(errorMessage).foregroundColor(.red).font(.caption)
                     }
                     
-                    // FIXED: The Button syntax is now correct. The action closure and
-                    // the label closure are properly separated.
                     Button(action: {
                         Task {
                             let success = await viewModel.processSubscription(planId: plan.id)
@@ -58,7 +57,7 @@ struct CheckoutView: View {
                                 .foregroundColor(.black)
                         }
                     }
-                    .frame(maxWidth: .infinity) // Correctly references maxWidth
+                    .frame(maxWidth: .infinity)
                     .frame(height: 55)
                     .background(Color(hex: "3AD7D5"))
                     .cornerRadius(12)
@@ -73,7 +72,6 @@ struct CheckoutView: View {
         .navigationBarTitleDisplayMode(.inline)
         .alert("Payment Successful!", isPresented: $showSuccessAlert) {
             Button("Great!", role: .cancel) {
-                // Dismiss the checkout view and the parent subscription view
                 dismiss()
             }
         } message: {
@@ -82,7 +80,6 @@ struct CheckoutView: View {
     }
 }
 
-// The PaymentMethodButton subview remains the same
 struct PaymentMethodButton: View {
     let method: PaymentMethod
     let isSelected: Bool
@@ -97,7 +94,7 @@ struct PaymentMethodButton: View {
                 .foregroundColor(isSelected ? Color(hex: "3AD7D5") : .gray)
         }
         .padding()
-        .background(.ultraThinMaterial.opacity(0.4))
+        .background(Material.ultraThinMaterial.opacity(0.4))
         .cornerRadius(12)
         .overlay(
             RoundedRectangle(cornerRadius: 12)

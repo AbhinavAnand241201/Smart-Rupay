@@ -1,5 +1,4 @@
-// NotificationManager.swift
-// Smart-Rupay App - Corrected
+
 //trying to resolve some issues here , will do it tmr.
 
 import UserNotifications
@@ -9,7 +8,6 @@ class NotificationManager {
     static let shared = NotificationManager()
     private init() {} // Singleton
 
-    // Request user permission for notifications
     func requestAuthorization(completion: @escaping (Bool, Error?) -> Void) {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
             DispatchQueue.main.async {
@@ -21,7 +19,6 @@ class NotificationManager {
         }
     }
 
-    // Check current notification authorization status
     func getNotificationAuthorizationStatus(completion: @escaping (UNAuthorizationStatus) -> Void) {
         UNUserNotificationCenter.current().getNotificationSettings { settings in
             DispatchQueue.main.async {
@@ -30,9 +27,7 @@ class NotificationManager {
         }
     }
 
-    // Schedule a local notification for a recurring payment
     func scheduleNotification(for payment: RecurringPayment, reminderDaysBefore: Int = 3, atHour: Int = 9, atMinute: Int = 0) {
-        // Ensure the payment isn't already ended
         if payment.isEnded {
             print("Payment '\(payment.name)' has already ended. No notification scheduled.")
             cancelNotification(for: payment) // Cancel any lingering notifications
@@ -41,11 +36,9 @@ class NotificationManager {
 
         let content = UNMutableNotificationContent()
         content.title = "Upcoming: \(payment.name)"
-        // **CORRECTED LINE BELOW**
         content.body = String(format: "$%.2f due on %@", payment.amount, payment.nextDueDate.formatted(date: .long, time: .omitted))
         content.sound = .default
         content.userInfo = ["paymentID": payment.id.uuidString]
-        // content.badge = 1 // Manage badge count carefully
 
         guard var reminderTriggerDate = Calendar.current.date(byAdding: .day, value: -reminderDaysBefore, to: payment.nextDueDate) else {
             print("Could not calculate reminder trigger date for \(payment.name).")

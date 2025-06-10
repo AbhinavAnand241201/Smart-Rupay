@@ -1,5 +1,3 @@
-// AddEditRecurringPaymentView.swift
-// Smart-Rupay App
 
 import SwiftUI
 
@@ -18,7 +16,7 @@ struct AddEditRecurringPaymentView: View {
     @State private var endDate: Date = Calendar.current.date(byAdding: .year, value: 1, to: Date())! // Default end date if toggled
     @State private var notes: String = ""
     
-    // MARK: - UI Colors
+
     let screenBackgroundColor = Color(red: 0.08, green: 0.09, blue: 0.10)
     let cardBackgroundColor = Color(red: 0.15, green: 0.16, blue: 0.18)
     let mainTextColor = Color.white
@@ -142,11 +140,11 @@ struct AddEditRecurringPaymentView: View {
                 category: category.trimmingCharacters(in: .whitespacesAndNewlines),
                 recurrenceInterval: recurrenceInterval,
                 startDate: startDate,
-                nextDueDate: paymentToEdit?.nextDueDate, // Let ViewModel recalculate this if needed based on changes
+                nextDueDate: paymentToEdit?.nextDueDate, 
                 endDate: finalEndDate,
                 notes: notes.isEmpty ? nil : notes,
-                iconName: paymentToEdit!.iconName, // Keep original icon/color
-                colorHex: paymentToEdit!.colorHex  // Keep original icon/color
+                iconName: paymentToEdit!.iconName, 
+                colorHex: paymentToEdit!.colorHex  
             )
             viewModel.updatePayment(updatedPayment)
         } else { // Adding new
