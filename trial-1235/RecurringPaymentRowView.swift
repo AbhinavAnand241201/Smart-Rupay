@@ -1,144 +1,47 @@
+// In the file containing RecurringPaymentsListView
+
 import SwiftUI
 
-struct RecurringPaymentRowView: View {
-    let payment: RecurringPayment
-    @ObservedObject var viewModel: RecurringPaymentsViewModel
-
-    let cardBackgroundColor = Color(red: 0.15, green: 0.16, blue: 0.18)
-    let mainTextColor = Color.white
-    let secondaryTextColor = Color(hex: "A0A0A0")
-    let accentColorTeal = Color(hex: "3AD7D5")
-    let overdueColor = Color.orange
-
-    var body: some View {
-        HStack(spacing: 15) {
-            Image(systemName: payment.iconName)
-                .font(.system(size: 20))
-                .foregroundColor(payment.accentColor)
-                .frame(width: 44, height: 44)
-                .background(payment.accentColor.opacity(0.15))
-                .clipShape(RoundedRectangle(cornerRadius: 10))
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(payment.name)
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(mainTextColor)
-                    .strikethrough(payment.isEnded, color: secondaryTextColor)
-
-                Text(String(format: "$%.2f / %@", payment.amount, payment.recurrenceInterval.rawValue))
-                    .font(.caption)
-                    .foregroundColor(secondaryTextColor)
-                    .strikethrough(payment.isEnded, color: secondaryTextColor)
-
-                HStack(spacing: 4) {
-                    Text(payment.isEnded ? "Ended:" : (payment.isPastDue ? "Due:" : "Next:"))
-                        .font(.caption.weight(.medium))
-                        .foregroundColor(payment.isEnded ? secondaryTextColor : (payment.isPastDue ? overdueColor : payment.accentColor))
-                    Text("\(payment.nextDueDate, style: .date)")
-                        .font(.caption)
-                        .foregroundColor(payment.isEnded ? secondaryTextColor : (payment.isPastDue ? overdueColor : mainTextColor))
-                }
-                if payment.isEnded, let endDate = payment.endDate {
-                     Text("Concluded on \(endDate, style: .date)")
-                        .font(.caption2)
-                        .foregroundColor(secondaryTextColor)
-                } else if let endDate = payment.endDate {
-                    Text("Ends: \(endDate, style: .date)")
-                        .font(.caption2)
-                        .foregroundColor(secondaryTextColor)
-                }
-            }
-
-            Spacer()
-
-            if !payment.isEnded {
-                Button {
-                    viewModel.markAsPaidAndAdvanceDueDate(paymentId: payment.id)
-                } label: {
-                    Text("Paid")
-                        .font(.caption.bold())
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 7)
-                        .foregroundColor(Color.black)
-                        .background(accentColorTeal)
-                        .cornerRadius(8)
-                }
-                .buttonStyle(.plain)
-            } else {
-                 Image(systemName: "checkmark.circle.fill")
-                    .font(.title2)
-                    .foregroundColor(payment.accentColor.opacity(0.7))
-            }
-        }
-        .padding()
-        .background(cardBackgroundColor)
-        .cornerRadius(12)
-        .opacity(payment.isEnded ? 0.7 : 1.0)
-    }
-}
-
 struct RecurringPaymentsListView: View {
+    // MARK: - Properties
     @StateObject private var viewModel = RecurringPaymentsViewModel()
     @State private var showingAddEditPaymentSheet = false
     @State private var paymentToEdit: RecurringPayment? = nil
     @State private var showPermissionDeniedAlert = false
 
-    let screenBackgroundColor = Color(red: 0.08, green: 0.09, blue: 0.10)
-    let mainTextColor = Color.white
-    let accentColorTeal = Color(hex: "3AD7D5")
-    let secondaryTextColor = Color(hex: "A0A0A0")
-    
+    // MARK: - Body
     var body: some View {
         NavigationView {
-            ZStack {
-                screenBackgroundColor.ignoresSafeArea()
+            ZStack(alignment: .bottomTrailing) {
+                Color.App.background.ignoresSafeArea()
 
-                VStack(spacing: 0) {
-                    if viewModel.notificationAuthStatus == .denied || viewModel.notificationAuthStatus == .notDetermined {
-                        NotificationPermissionBar(viewModel: viewModel, showPermissionDeniedAlert: $showPermissionDeniedAlert)
-                            .padding(.horizontal)
-                            .padding(.top, 5)
-                    }
+                VStack(alignment: .leading, spacing: 0) {
+                    // Header with improved spacing
+                    Text("Recurring & Bills")
+                        .font(.largeTitle.bold())
+                        .foregroundColor(Color.App.textPrimary)
+                        .padding(.horizontal)
+                        .padding(.top, 5)
                     
+                    // A subtle divider for better visual separation
+                    Divider()
+                        .background(Color.App.card)
+                        .padding(.horizontal)
+                        .padding(.top, 10)
+
+                    // Main Content Area
                     if viewModel.recurringPayments.isEmpty {
                         emptyStateView
                     } else {
-                        List {
-                            ForEach(viewModel.recurringPayments) { payment in
-                                RecurringPaymentRowView(payment: payment, viewModel: viewModel)
-                                    .onTapGesture {
-                                        self.paymentToEdit = payment
-                                        self.showingAddEditPaymentSheet = true
-                                    }
-                                    .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
-                                    .listRowSeparator(.hidden)
-                                    .listRowBackground(screenBackgroundColor)
-                            }
-                            .onDelete(perform: viewModel.deletePayment)
-                        }
-                        .listStyle(.plain)
-                        .background(screenBackgroundColor)
-                        .refreshable {
-                            viewModel.scheduleInitialRemindersForAllActivePayments()
-                        }
+                        paymentsList
                     }
                 }
+                .padding(.top)
+                
+                // Floating Action Button for adding new payments
+                floatingAddButton
             }
-            .navigationTitle("Recurring & Bills")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        self.paymentToEdit = nil // For adding new
-                        self.showingAddEditPaymentSheet = true
-                    } label: {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.system(size: 22))
-                            .foregroundColor(accentColorTeal)
-                    }
-                }
-
-            }
+            .navigationBarHidden(true)
             .sheet(isPresented: $showingAddEditPaymentSheet) {
                 AddEditRecurringPaymentView(viewModel: viewModel, paymentToEdit: paymentToEdit)
             }
@@ -146,94 +49,192 @@ struct RecurringPaymentsListView: View {
                 Button("Open Settings") { viewModel.openAppSettings() }
                 Button("Cancel", role: .cancel) {}
             } message: {
-                Text("To receive bill reminders, please enable notifications for Smart-Rupay in your iPhone's Settings app.")
+                Text("To receive bill reminders, please enable notifications in your iPhone's Settings app.")
             }
             .onAppear {
-
-                 viewModel.checkNotificationPermission()
-                 if viewModel.notificationAuthStatus == .authorized {
-                     viewModel.scheduleInitialRemindersForAllActivePayments()
-                 }
+                viewModel.checkNotificationPermission()
             }
         }
-        .preferredColorScheme(.dark)
     }
     
-    @ViewBuilder
-    private var emptyStateView: some View {
-        VStack(spacing: 15) {
-            Spacer()
-            Image(systemName: "repeat.circle.fill")
-                .font(.system(size: 60))
-                .foregroundColor(secondaryTextColor.opacity(0.5))
-            Text("No Recurring Payments")
-                .font(.title2.weight(.semibold))
-                .foregroundColor(secondaryTextColor)
-            Text("Track your subscriptions and regular bills by adding them here. Tap '+' to start.")
-                .font(.subheadline)
-                .foregroundColor(secondaryTextColor.opacity(0.7))
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 40)
-            Button {
-                self.paymentToEdit = nil
-                self.showingAddEditPaymentSheet = true
-            } label: {
-                Text("Add First Payment")
-                    .fontWeight(.semibold)
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 10)
-                    .background(accentColorTeal)
-                    .foregroundColor(.black)
-                    .cornerRadius(10)
+    // MARK: - Subviews
+    private var paymentsList: some View {
+        ScrollView {
+            VStack(spacing: 0) {
+                if viewModel.notificationAuthStatus != .authorized {
+                    NotificationPermissionBar(viewModel: viewModel, showPermissionDeniedAlert: $showPermissionDeniedAlert)
+                        .padding([.horizontal, .bottom])
+                }
+                
+                LazyVStack(spacing: 16) {
+                    ForEach(viewModel.recurringPayments) { payment in
+                        RecurringPaymentRowView(payment: payment, viewModel: viewModel)
+                            .onTapGesture {
+                                self.paymentToEdit = payment
+                                self.showingAddEditPaymentSheet = true
+                            }
+                    }
+                }
+                .padding(.horizontal)
             }
-            .padding(.top)
-            Spacer()
-            Spacer()
+            .padding(.top, 10)
+        }
+    }
+    
+    private var floatingAddButton: some View {
+        Button(action: {
+            self.paymentToEdit = nil
+            self.showingAddEditPaymentSheet = true
+        }) {
+            Image(systemName: "plus")
+                .font(.title.weight(.semibold))
+                .foregroundColor(.black)
+                .frame(width: 60, height: 60)
+                .background(Color.App.accent)
+                .clipShape(Circle())
+                .shadow(color: Color.App.accent.opacity(0.4), radius: 10, y: 5)
         }
         .padding()
     }
-}
-
-struct NotificationPermissionBar: View {
-    @ObservedObject var viewModel: RecurringPaymentsViewModel
-    @Binding var showPermissionDeniedAlert: Bool
     
-    let cardBackgroundColor = Color(red: 0.15, green: 0.16, blue: 0.18)
-    let accentColorTeal = Color(hex: "3AD7D5")
-
-    var body: some View {
-        HStack {
-            Image(systemName: "bell.badge.fill")
-                .foregroundColor(accentColorTeal)
-            VStack(alignment: .leading) {
-                Text("Enable Bill Reminders")
-                    .font(.footnote.bold())
-                Text("Get notified before your bills are due.")
-                    .font(.caption2)
-            }
+    private var emptyStateView: some View {
+        VStack(spacing: 20) {
             Spacer()
-            Button {
-                if viewModel.notificationAuthStatus == .denied {
-                    showPermissionDeniedAlert = true
-                } else { // .notDetermined or other states
-                    viewModel.requestNotificationPermission()
-                }
-            } label: {
-                Text(viewModel.notificationAuthStatus == .denied ? "Settings" : "Enable")
-                    .font(.caption.bold())
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(accentColorTeal.opacity(0.2))
-                    .foregroundColor(accentColorTeal)
-                    .cornerRadius(6)
-            }
+            Image(systemName: "repeat.circle.fill")
+                .font(.system(size: 60))
+                .foregroundColor(Color.App.accent.opacity(0.6))
+            Text("No Recurring Payments")
+                .font(.title2.weight(.bold))
+            Text("Track subscriptions and bills so you never miss a due date. Tap '+' to start.")
+                .font(.subheadline)
+                .foregroundColor(.App.textSecondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 40)
+            Spacer()
+            Spacer()
         }
-        .padding(12)
-        .background(cardBackgroundColor)
-        .cornerRadius(10)
     }
 }
 
+// MARK: - Refined Row View
+struct RecurringPaymentRowView: View {
+    let payment: RecurringPayment
+    @ObservedObject var viewModel: RecurringPaymentsViewModel
+
+    var body: some View {
+        HStack(spacing: 16) {
+            Image(systemName: payment.iconName)
+                .font(.title3.weight(.medium))
+                .foregroundColor(payment.accentColor)
+                .frame(width: 50, height: 50)
+                .background(payment.accentColor.opacity(0.15))
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text(payment.name)
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(Color.App.textPrimary)
+                    .strikethrough(payment.isEnded, color: Color.App.textSecondary)
+
+                HStack(spacing: 4) {
+                    let isOverdue = payment.isPastDue && !payment.isEnded
+                    
+                    Text(payment.isEnded ? "Ended" : (isOverdue ? "Due" : "Next"))
+                        .font(.caption.weight(.semibold))
+                        // Using a brighter orange for better contrast when overdue
+                        .foregroundColor(isOverdue ? Color.App.accentOrange : Color.App.textSecondary)
+                    
+                    Text(payment.nextDueDate, style: .date)
+                        .font(.caption.weight(.semibold))
+                        // Bolder text color for overdue date
+                        .foregroundColor(isOverdue ? .white : Color.App.textSecondary)
+                }
+            }
+
+            Spacer()
+            
+            VStack(alignment: .trailing, spacing: 6) {
+                Text("₹\(Int(payment.amount))")
+                    .font(.headline.bold())
+                    .strikethrough(payment.isEnded, color: Color.App.textSecondary)
+                
+                Text(payment.recurrenceInterval.rawValue)
+                    .font(.caption)
+                    .foregroundColor(Color.App.textSecondary)
+            }
+
+            if !payment.isEnded {
+                // Redesigned "Mark Paid" button for better visibility and feel
+                Button {
+                    viewModel.markAsPaidAndAdvanceDueDate(paymentId: payment.id)
+                } label: {
+                    Image(systemName: "checkmark")
+                        .font(.body.weight(.bold))
+                        .foregroundColor(.black)
+                        .padding(10)
+                        .background(Color.App.accent.gradient) // Using a gradient
+                        .clipShape(Circle())
+                        .shadow(color: Color.App.accent.opacity(0.3), radius: 5, y: 3)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding()
+        .background(Color.App.card)
+        .cornerRadius(20)
+        .overlay(
+             // Adding a colored border for overdue items to make them stand out more
+            RoundedRectangle(cornerRadius: 20)
+                .stroke(payment.isPastDue && !payment.isEnded ? Color.App.accentOrange : Color.clear, lineWidth: 1.5)
+        )
+        .opacity(payment.isEnded ? 0.6 : 1.0)
+    }
+}
+
+// MARK: - Redesigned Notification Bar
+struct NotificationPermissionBar: View {
+    @ObservedObject var viewModel: RecurringPaymentsViewModel
+    @Binding var showPermissionDeniedAlert: Bool
+
+    var body: some View {
+        HStack(spacing: 16) {
+            Image(systemName: "bell.badge.fill")
+                .font(.title2)
+                .foregroundColor(Color.App.accent)
+            
+            VStack(alignment: .leading) {
+                Text("Enable Bill Reminders")
+                    .font(.headline)
+                    .foregroundColor(Color.App.textPrimary)
+                Text("Get notified before payments are due.")
+                    .font(.caption)
+                    .foregroundColor(Color.App.textSecondary)
+            }
+            
+            Spacer()
+            
+            Button(action: {
+                if viewModel.notificationAuthStatus == .denied {
+                    showPermissionDeniedAlert = true
+                } else {
+                    viewModel.requestNotificationPermission()
+                }
+            }) {
+                Text(viewModel.notificationAuthStatus == .denied ? "Settings" : "Enable")
+                    .font(.callout.bold())
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .background(Color.App.accent.opacity(0.2))
+                    .foregroundColor(Color.App.accent)
+                    .cornerRadius(12)
+            }
+        }
+        .padding()
+        .background(Color.App.card)
+        .cornerRadius(20)
+    }
+}
 
 // MARK: - Preview
 struct RecurringPaymentsListView_Previews: PreviewProvider {

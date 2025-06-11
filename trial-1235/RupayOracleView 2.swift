@@ -1,17 +1,12 @@
-
+// In file: RupayOracleView.swift
 
 import SwiftUI
 
 struct RupayOracleView: View {
     @StateObject private var viewModel: RupayOracleViewModel
     
-
-    let screenBackgroundColor = Color(red: 0.08, green: 0.09, blue: 0.10)
-    let cardBackgroundColor = Color(red: 0.15, green: 0.16, blue: 0.18)
-    let mainTextColor = Color.white
-    let secondaryTextColor = Color(hex: "A0A0A0") // Assumes Color(hex:) is available
-    let accentColorTeal = Color(hex: "3AD7D5")
-    let headerTextColor = Color(hex: "BEBEBE")
+    // Grid layout for the metric cards
+    private let columns = [GridItem(.flexible(), spacing: 16), GridItem(.flexible(), spacing: 16)]
     
     init(viewModel: RupayOracleViewModel = RupayOracleViewModel()) {
         _viewModel = StateObject(wrappedValue: viewModel)
@@ -20,298 +15,228 @@ struct RupayOracleView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                screenBackgroundColor.ignoresSafeArea()
+                Color.App.background.ignoresSafeArea()
+                // A new, radiant background gradient
+                RadialGradient(gradient: Gradient(colors: [Color.App.accentBlue.opacity(0.3), Color.App.background]), center: .topLeading, startRadius: 5, endRadius: 800)
+                    .ignoresSafeArea()
+
                 ScrollView {
-                    VStack(spacing: 25) {
-                        OverallWellnessScoreView(score: viewModel.overallWellnessScore, accentColor: accentColorTeal)
+                    VStack(spacing: 24) {
+                        OverallWellnessScoreView(score: viewModel.overallWellnessScore)
                             .padding(.top, 20)
-
-                        VStack(alignment: .leading) {
-                            Text("Average Monthly Income")
-                                .font(.headline)
-                                .foregroundColor(headerTextColor)
-                            HStack {
-                                Text("$")
-                                    .foregroundColor(mainTextColor)
-                                TextField("Enter Income", text: $viewModel.averageMonthlyIncomeString)
-                                    .keyboardType(.decimalPad)
-                                    .foregroundColor(mainTextColor)
-                                    .tint(accentColorTeal)
-                                    .onSubmit(viewModel.recalculateWellnessMetrics)
-                                Button("Update") {
-                                    viewModel.recalculateWellnessMetrics()
-                                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-                                }
-                                .foregroundColor(accentColorTeal)
-                            }
-                            .padding()
-                            .background(cardBackgroundColor)
-                            .cornerRadius(10)
+                        
+                        // Using a grid for a more dynamic dashboard layout
+                        LazyVGrid(columns: columns, spacing: 16) {
+                            MetricCardView(metric: .budgetAdherence(viewModel.budgetAdherenceScore))
+                            MetricCardView(metric: .emergencyFund(viewModel.emergencyFundProgressScore))
+                            MetricCardView(metric: .savingsRate(viewModel.savingsRate))
+                            MetricCardView(metric: .avgExpenses(viewModel.averageMonthlyExpenses))
                         }
                         .padding(.horizontal)
-
-                        VStack(spacing: 15) {
-                             MetricCardView(
-                                title: "Budget Adherence",
-                                value: String(format: "%.0f%%", viewModel.budgetAdherenceScore),
-                                interpretation: viewModel.budgetAdherenceScore > 75 ? "Great job!" : (viewModel.budgetAdherenceScore > 50 ? "Doing well" : "Room to improve"),
-                                progress: viewModel.budgetAdherenceScore / 100.0,
-                                color: getColorForScore(viewModel.budgetAdherenceScore)
-                            )
-                            MetricCardView(
-                                title: "Emergency Fund",
-                                value: String(format: "%.0f%% funded", viewModel.emergencyFundProgressScore),
-                                interpretation: viewModel.emergencyFundProgressScore > 75 ? "Well prepared!" : (viewModel.emergencyFundProgressScore > 50 ? "Good progress" : "Keep building"),
-                                progress: viewModel.emergencyFundProgressScore / 100.0,
-                                color: getColorForScore(viewModel.emergencyFundProgressScore)
-                            )
-                             MetricCardView(
-                                title: "Savings Rate",
-                                value: String(format: "%.1f%%", viewModel.savingsRate),
-                                interpretation: savingsRateInterpretation(viewModel.savingsRate),
-                                progress: viewModel.savingsRateScore / 100.0,
-                                color: getColorForScore(viewModel.savingsRateScore)
-                            )
-                            MetricCardView(
-                                title: "Avg. Monthly Expenses",
-                                value: String(format: "$%.2f", viewModel.averageMonthlyExpenses),
-                                interpretation: "Based on last 30 days",
-                                color: secondaryTextColor
-                            )
-                        }
-                        .padding(.horizontal)
-
-                        AchievementsView(badges: viewModel.badges.filter { $0.isAchieved })
-                            .padding(.horizontal)
-
-                        OracleTipView(tip: viewModel.oracleTip, accentColor: accentColorTeal)
+                        
+                        AchievementsView(badges: viewModel.badges)
                             .padding(.horizontal)
                         
-                        Spacer(minLength: 20)
+                        OracleTipView(tip: viewModel.oracleTip)
+                            .padding(.horizontal)
+                        
                     }
+                    .padding(.bottom, 40)
                 }
             }
             .navigationTitle("Rupay Oracle")
-            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Text("Rupay Oracle")
-                        .font(.system(size: 20, weight: .bold))
-                        .foregroundColor(mainTextColor)
-                }
-                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button { viewModel.recalculateWellnessMetrics() } label: {
-                        Image(systemName: "arrow.clockwise.circle.fill")
-                            .foregroundColor(accentColorTeal)
-                    }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button { viewModel.recalculateWellnessMetrics() } label: { Image(systemName: "arrow.clockwise") }
                 }
             }
-            .onAppear { viewModel.recalculateWellnessMetrics() }
+            .accentColor(Color.App.accent)
         }
-        .preferredColorScheme(.dark)
-    }
-    
-    func getColorForScore(_ score: Double) -> Color {
-        if score >= 80 { return .green }
-        if score >= 50 { return .yellow }
-        return .orange
-    }
-
-    func savingsRateInterpretation(_ rate: Double) -> String {
-        if rate >= 20 { return "Excellent! You're a super saver." }
-        if rate >= 15 { return "Great! Solid saving habits." }
-        if rate >= 10 { return "Good start! Keep building on it." }
-        if rate >= 5 { return "Making progress! Every bit counts." }
-        if rate > 0 { return "Saving something is better than nothing!"}
-        if rate == 0 && viewModel.getAverageMonthlyIncome() > 0 { return "Aim to save something each month."}
-        if viewModel.getAverageMonthlyIncome() <= 0 { return "Update income to see savings rate."}
-        return "Consider ways to increase savings."
     }
 }
 
 
-
-struct OverallWellnessScoreView: View {
+// MARK: - Redesigned Subviews
+private struct OverallWellnessScoreView: View {
     let score: Double
-    let accentColor: Color
-    let mainTextColor = Color.white
-
+    
+    var scoreColor: Color {
+        if score >= 80 { return .App.accentGreen }
+        if score >= 50 { return .App.accentOrange }
+        return .App.accentPink
+    }
+    
     var body: some View {
-        VStack {
+        VStack(spacing: 8) {
             ZStack {
                 Circle()
-                    .stroke(lineWidth: 15)
+                    .fill(Color.App.card.opacity(0.5))
+                    .shadow(radius: 20)
+
+                Circle()
+                    .stroke(lineWidth: 12)
                     .opacity(0.2)
-                    .foregroundColor(accentColor)
+                    .foregroundColor(scoreColor)
 
                 Circle()
                     .trim(from: 0.0, to: CGFloat(min(score / 100.0, 1.0)))
-                    .stroke(style: StrokeStyle(lineWidth: 15, lineCap: .round, lineJoin: .round))
-                    .foregroundColor(accentColor)
+                    .stroke(style: StrokeStyle(lineWidth: 12, lineCap: .round, lineJoin: .round))
+                    .fill(scoreColor.gradient)
                     .rotationEffect(Angle(degrees: -90.0))
-                    .animation(.interactiveSpring(), value: score)
+                    .shadow(color: scoreColor, radius: 10)
 
                 Text(String(format: "%.0f", score))
-                    .font(.system(size: 40, weight: .bold))
-                    .foregroundColor(mainTextColor)
+                    .font(.system(size: 60, weight: .bold, design: .rounded))
+                    .foregroundColor(.App.textPrimary)
             }
-            .frame(width: 150, height: 150)
+            .frame(width: 180, height: 180)
             
             Text("Financial Wellness")
-                .font(.title3.weight(.semibold))
-                .foregroundColor(mainTextColor)
-                .padding(.top, 8)
+                .font(.title2.weight(.semibold))
         }
     }
 }
 
-struct MetricCardView: View {
-    let title: String
-    let value: String
-    let interpretation: String?
-    var progress: Double? = nil
-    let color: Color
+// A new enum to make MetricCardView more reusable and powerful
+enum FinancialMetric {
+    case budgetAdherence(Double)
+    case emergencyFund(Double)
+    case savingsRate(Double)
+    case avgExpenses(Double)
+    
+    var title: String {
+        switch self {
+        case .budgetAdherence: "Budget Adherence"
+        case .emergencyFund: "Emergency Fund"
+        case .savingsRate: "Savings Rate"
+        case .avgExpenses: "Avg. Expenses"
+        }
+    }
+    
+    var valueString: String {
+        switch self {
+        case .budgetAdherence(let val): String(format: "%.0f%%", val)
+        case .emergencyFund(let val): String(format: "%.0f%%", val)
+        case .savingsRate(let val): String(format: "%.1f%%", val)
+        case .avgExpenses(let val): "₹\(Int(val))"
+        }
+    }
+    
+    var progress: Double? {
+        switch self {
+        case .budgetAdherence(let val): val / 100.0
+        case .emergencyFund(let val): val / 100.0
+        case .savingsRate(let val): val / 20.0 // Assume 20% is a good target
+        case .avgExpenses: nil
+        }
+    }
+    
+    var color: Color {
+        let score: Double
+        switch self {
+        case .budgetAdherence(let val), .emergencyFund(let val), .savingsRate(let val):
+            score = val
+        case .avgExpenses: return .App.textSecondary
+        }
+        if score >= 80 || (self.title == "Savings Rate" && score >= 15) { return .App.accentGreen }
+        if score >= 50 || (self.title == "Savings Rate" && score >= 5) { return .App.accentOrange }
+        return .App.accentPink
+    }
+}
 
-    let cardBackgroundColor = Color(red: 0.15, green: 0.16, blue: 0.18)
-    let mainTextColor = Color.white
-    let secondaryTextColor = Color(hex: "A0A0A0") // Assumes Color(hex:) is available
 
+private struct MetricCardView: View {
+    let metric: FinancialMetric
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text(title)
-                    .font(.headline)
-                    .foregroundColor(mainTextColor)
-                Spacer()
-                Text(value)
-                    .font(.title3.weight(.bold))
-                    .foregroundColor(color)
-            }
-            if let interpretation = interpretation, !interpretation.isEmpty {
-                Text(interpretation)
-                    .font(.caption)
-                    .foregroundColor(secondaryTextColor)
-            }
-            if let progress = progress {
+            Text(metric.title)
+                .font(.headline)
+                .foregroundColor(.App.textSecondary)
+            
+            Spacer()
+            
+            Text(metric.valueString)
+                .font(.system(size: 28, weight: .bold, design: .rounded))
+                .foregroundColor(metric.color)
+            
+            if let progress = metric.progress {
                 ProgressView(value: progress)
-                    .progressViewStyle(LinearProgressViewStyle(tint: color))
+                    .progressViewStyle(LinearProgressViewStyle(tint: metric.color))
                     .scaleEffect(x: 1, y: 1.5, anchor: .center)
                     .clipShape(Capsule())
-                    .padding(.top, 4)
             }
         }
         .padding()
-        .background(cardBackgroundColor)
-        .cornerRadius(10)
-    }
-}
-
-struct OracleTipView: View {
-    let tip: String
-    let accentColor: Color
-    
-    let cardBackgroundColor = Color(red: 0.15, green: 0.16, blue: 0.18)
-    let mainTextColor = Color.white
-
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Image(systemName: "lightbulb.fill")
-                    .foregroundColor(accentColor)
-                    .font(.title3)
-                Text("Rupay Oracle's Tip")
-                    .font(.headline)
-                    .foregroundColor(accentColor)
-            }
-            Text(tip)
-                .font(.subheadline)
-                .foregroundColor(mainTextColor)
-                .lineSpacing(4)
-        }
-        .padding()
+        .frame(height: 120)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(cardBackgroundColor.opacity(0.85))
-        .cornerRadius(10)
+        .background(.ultraThinMaterial.opacity(0.8)) // Glassmorphism effect
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 10)
-                .stroke(accentColor.opacity(0.6), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .stroke(Color.App.textSecondary.opacity(0.2), lineWidth: 1)
         )
     }
 }
 
-struct AchievementsView: View {
-    let badges: [Badge]
-    
-    let cardBackgroundColor = Color(red: 0.15, green: 0.16, blue: 0.18)
-    let mainTextColor = Color.white
-    let headerTextColor = Color(hex: "BEBEBE")
-
+private struct OracleTipView: View {
+    let tip: String
     var body: some View {
-        if !badges.isEmpty {
-            VStack(alignment: .leading, spacing: 10) {
-                Text("Your Achievements")
-                    .font(.headline)
-                    .foregroundColor(headerTextColor)
-                
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 12) {
-                        ForEach(badges) { badge in
-                            VStack(spacing: 6) {
-                                Image(systemName: badge.isAchieved ? badge.achievedIconName : badge.iconName)
-                                    .font(.system(size: 28))
-                                    .foregroundColor(badge.isAchieved ? badge.accentColor : Color.gray.opacity(0.4))
-                                    .frame(width: 55, height: 55)
-                                    .background(
-                                        (badge.isAchieved ? badge.accentColor : Color.gray)
-                                            .opacity(0.1)
-                                            .clipShape(Circle())
-                                    )
-                                
-                                Text(badge.name)
-                                    .font(.caption.weight(.medium))
-                                    .foregroundColor(mainTextColor)
-                                    .lineLimit(2)
-                                    .multilineTextAlignment(.center)
-                                    .frame(width: 70)
-                                
-                                if badge.isAchieved, let date = badge.achievedDate {
-                                     Text(date.formatted(.dateTime.month().day()))
-                                        .font(.caption2)
-                                        .foregroundColor(Color(hex:"A0A0A0"))
-                                } else if !badge.isAchieved {
-                                    Text("Locked")
-                                        .font(.caption2)
-                                        .foregroundColor(Color.gray.opacity(0.6))
-                                }
-                            }
-                            .padding(10)
-                            .frame(width: 90)
-                            .background(cardBackgroundColor.opacity(0.7))
-                            .cornerRadius(10)
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: "lightbulb.fill")
+                .font(.title2)
+                .foregroundColor(Color.App.accentOrange)
+                .shadow(color: Color.App.accentOrange, radius: 5)
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Rupay Oracle's Tip")
+                    .font(.headline.weight(.bold))
+                    .foregroundColor(.App.textPrimary)
+                Text(tip)
+                    .font(.subheadline)
+                    .foregroundColor(.App.textSecondary)
+            }
+        }
+        .padding()
+        .background(.ultraThinMaterial.opacity(0.8))
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+    }
+}
+
+private struct AchievementsView: View {
+    let badges: [Badge]
+    var body: some View {
+        // ... Code for this view can be enhanced similarly, this is a good start
+        // To keep focus, this component's visual style is mostly preserved
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Recent Achievements")
+                .font(.title3.bold())
+                .foregroundColor(.App.textPrimary)
+            
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 16) {
+                    ForEach(badges.filter { $0.isAchieved }) { badge in
+                        VStack {
+                            Image(systemName: badge.achievedIconName)
+                                .font(.system(size: 28))
+                                .foregroundColor(badge.accentColor)
+                                .shadow(color: badge.accentColor, radius: 5)
+                                .frame(width: 60, height: 60)
+                                .background(badge.accentColor.opacity(0.15).clipShape(Circle()))
+                            Text(badge.name)
+                                .font(.caption.weight(.medium))
+                                .foregroundColor(.App.textSecondary)
                         }
                     }
-                    .padding(.vertical, 5)
                 }
             }
-        } else {
-
-            EmptyView()
         }
     }
 }
 
-
-struct RupayOracleView_Previews_Phase2: PreviewProvider {
+// MARK: - Preview
+struct RupayOracleView_Previews: PreviewProvider {
     static var previews: some View {
-        let sampleViewModel = RupayOracleViewModel(
-            sampleTransactions: RupayOracleViewModel.generateSampleTransactions(),
-            sampleBudgets: RupayOracleViewModel.generateSampleBudgets(colors: [Color.blue, Color.green, Color.orange]),
-            sampleGoals: RupayOracleViewModel.generateSampleGoals(colors: [Color.purple, Color.pink])
-        )
-        sampleViewModel.averageMonthlyIncomeString = "6000"
-        sampleViewModel.recalculateWellnessMetrics()
-
-        return RupayOracleView(viewModel: sampleViewModel)
+        RupayOracleView()
     }
 }

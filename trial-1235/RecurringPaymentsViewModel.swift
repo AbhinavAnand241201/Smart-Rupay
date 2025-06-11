@@ -39,15 +39,48 @@ class RecurringPaymentsViewModel: ObservableObject {
             self.recurringPayments = []
         }
     }
+//
+//    init() {
+//        loadPayments()
+//        checkNotificationPermission()
+//        if notificationAuthStatus == .authorized {
+//            scheduleInitialRemindersForAllActivePayments()
+//        }
+//    }
 
-    init() {
-        loadPayments()
-        checkNotificationPermission()
-        if notificationAuthStatus == .authorized {
-            scheduleInitialRemindersForAllActivePayments()
+    
+   
+        init() {
+            // For the demo, we will load rich sample data instead of loading from UserDefaults
+            loadSamplePayments()
+            
+            checkNotificationPermission()
+            if notificationAuthStatus == .authorized {
+                scheduleInitialRemindersForAllActivePayments()
+            }
         }
-    }
 
+//        // Add this new function to load our sample data
+//        private func loadSamplePayments() {
+//            let calendar = Calendar.current
+//            let today = Date()
+//            
+//            let sampleData: [RecurringPayment] = [
+//                // An overdue payment
+//                .init(name: "Phone Bill", amount: 2499, category: "Utilities", recurrenceInterval: .monthly, startDate: calendar.date(byAdding: .month, value: -1, to: today)!, nextDueDate: calendar.date(byAdding: .day, value: -2, to: today), iconName: "phone.fill", colorHex: "FF9F0A"),
+//                // An upcoming payment
+//                .init(name: "Netflix Premium", amount: 649, category: "Subscription", recurrenceInterval: .monthly, startDate: calendar.date(byAdding: .month, value: -2, to: today)!, nextDueDate: calendar.date(byAdding: .day, value: 5, to: today), iconName: "tv.fill", colorHex: "E50914"),
+//                // Another upcoming payment
+//                .init(name: "Gym Membership", amount: 1500, category: "Membership", recurrenceInterval: .monthly, startDate: calendar.date(byAdding: .day, value: -45, to: today)!, nextDueDate: calendar.date(byAdding: .day, value: 12, to: today), iconName: "figure.run", colorHex: "30D158"),
+//                // An ended payment
+//                .init(name: "Old Insurance Plan", amount: 5000, category: "Insurance", recurrenceInterval: .yearly, startDate: calendar.date(byAdding: .year, value: -2, to: today)!, endDate: calendar.date(byAdding: .month, value: -2, to: today)!, iconName: "shield.checkered", colorHex: "8E8E93")
+//            ]
+//            
+//            self.recurringPayments = sampleData
+//            sortPayments() // Ensure they are sorted correctly
+//        }
+        
+        // --- All other functions (save, load, add, update, delete, notifications, etc.) remain unchanged ---
     func checkNotificationPermission() {
         NotificationManager.shared.getNotificationAuthorizationStatus { status in
             self.notificationAuthStatus = status
