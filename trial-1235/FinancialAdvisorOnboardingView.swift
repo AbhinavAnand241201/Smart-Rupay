@@ -1,6 +1,10 @@
+// In file: FinancialAdvisorOnboardingView.swift
+
 import SwiftUI
 
 struct FinancialAdvisorOnboardingView: View {
+    // MARK: - Properties
+    // All original state and logic are preserved
     @State private var monthlyIncome: String = ""
     @State private var monthlyExpenses: String = ""
     @State private var financialGoals: String = ""
@@ -11,73 +15,119 @@ struct FinancialAdvisorOnboardingView: View {
     @State private var showAlert = false
     @State private var alertMessage = ""
 
-    let backgroundColor = Color(red: 0.07, green: 0.08, blue: 0.09)
-    let buttonAndTitleAccentColor = Color(hex: "38D9A9")
-    let subtitleTextColor = Color(hex: "AEAEB2")
-
+    // MARK: - Body
     var body: some View {
         ZStack {
-            backgroundColor.ignoresSafeArea()
-            ScrollView {
-                VStack(alignment: .center, spacing: 20) {
-                    Spacer(minLength: 40)
-
-                    Text("AI Financial Planner")
-                        .font(.system(size: 30, weight: .bold, design: .rounded))
-                        .foregroundColor(buttonAndTitleAccentColor)
-                    
-                    Text("Get an educational plan based on established financial frameworks.")
-                        .font(.system(size: 16))
-                        .foregroundColor(subtitleTextColor)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 30)
-                        .padding(.bottom, 30)
-
-                    CustomStyledTextField(placeholder: "Your Monthly Income (₹)", text: $monthlyIncome, keyboardType: .decimalPad)
-                    CustomStyledTextField(placeholder: "Your Monthly Expenses (₹)", text: $monthlyExpenses, keyboardType: .decimalPad)
-                    CustomStyledTextField(placeholder: "Your Main Financial Goal (e.g., Buy a car)", text: $financialGoals)
-                }
-                .padding(.horizontal, 20)
-            }
+            // MARK: - Dynamic Background
+            // A subtle radial gradient adds depth and a modern feel
+            RadialGradient(
+                gradient: Gradient(colors: [Color.App.accentGreen.opacity(0.3), Color.App.background]),
+                center: .topLeading,
+                startRadius: 5,
+                endRadius: 800
+            )
+            .ignoresSafeArea()
             
+            Color.App.background.ignoresSafeArea()
+
+            // Main content stack
             VStack {
-                Spacer()
-                Button(action: generateFinancialPlan) {
-                    if isLoading {
-                        ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .black))
-                    } else {
-                        Text("Generate My Plan")
-                            .font(.system(size: 18, weight: .semibold, design: .rounded))
-                            .foregroundColor(.black)
+                ScrollView {
+                    VStack(alignment: .center, spacing: 20) {
+                        
+                        // MARK: - Header
+                        // A more engaging header with a prominent, glowing icon
+                        VStack {
+                            Image(systemName: "sparkles")
+                                .font(.system(size: 40))
+                                .foregroundColor(Color.App.accentGreen)
+                                .padding(20)
+                                .background(Color.App.accentGreen.opacity(0.1))
+                                .clipShape(Circle())
+                                .shadow(color: Color.App.accentGreen.opacity(0.5), radius: 15, x: 0, y: 0) // Glow effect
+                            
+                            Text("AI Financial Planner")
+                                .font(.system(size: 32, weight: .bold, design: .rounded))
+                                .foregroundColor(Color.App.textPrimary)
+                                .padding(.top, 10)
+                            
+                            Text("Get a personalized educational plan based on your financial situation.")
+                                .font(.headline)
+                                .foregroundColor(Color.App.textSecondary)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 30)
+                        }
+                        .padding(.vertical, 30)
+
+                        // MARK: - Form Fields
+                        // Using a new, enhanced text field style
+                        VStack(spacing: 16) {
+                            OnboardingTextField(
+                                iconName: "indianrupeesign.circle.fill",
+                                placeholder: "Your Monthly Income",
+                                text: $monthlyIncome,
+                                keyboardType: .decimalPad
+                            )
+                            OnboardingTextField(
+                                iconName: "cart.fill",
+                                placeholder: "Your Monthly Expenses",
+                                text: $monthlyExpenses,
+                                keyboardType: .decimalPad
+                            )
+                            OnboardingTextField(
+                                iconName: "target",
+                                placeholder: "Your Main Financial Goal",
+                                text: $financialGoals
+                            )
+                        }
+                        .padding(.horizontal)
                     }
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .background(buttonAndTitleAccentColor)
-                .cornerRadius(14)
-                .disabled(isLoading)
-                .padding(.horizontal, 25)
-                .padding(.bottom, 20)
+                
+                Spacer()
+                
+                // MARK: - Action Button
+                // A redesigned button with consistent styling
+                VStack {
+                    Button(action: generateFinancialPlan) {
+                        if isLoading {
+                            ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .black))
+                        } else {
+                            Text("Generate My Plan")
+                                .font(.system(size: 18, weight: .semibold, design: .rounded))
+                                .foregroundColor(.black)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 18)
+                    .background(Color.App.accentGreen) // Using the screen's primary accent
+                    .cornerRadius(20)
+                    .shadow(color: Color.App.accentGreen.opacity(0.4), radius: 10, y: 5)
+                    .disabled(isLoading)
+                    .padding(.horizontal, 30)
+                    .padding(.bottom, 20)
+                }
             }
-            .ignoresSafeArea(.keyboard, edges: .bottom)
         }
         .sheet(isPresented: $showPlanSheet) {
             if let plan = financialPlan {
-                FinancialPlanView(plan: plan) {
-                    showPlanSheet = false
-                }
+                FinancialPlanView(plan: plan) { showPlanSheet = false }
             }
         }
         .alert(isPresented: $showAlert) {
             Alert(title: Text("Invalid Input"), message: Text(alertMessage), dismissButton: .default(Text("OK")))
         }
         .onTapGesture {
+            // Dismiss keyboard on tap outside
             UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
         }
     }
     
+    // MARK: - Functions
+    // This logic remains exactly the same
     @MainActor
     private func generateFinancialPlan() {
+        // ... your existing generateFinancialPlan logic ...
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
         
         guard let income = Double(monthlyIncome), income > 0 else {
@@ -116,5 +166,43 @@ struct FinancialAdvisorOnboardingView: View {
             
             self.isLoading = false
         }
+    }
+}
+
+// MARK: - Enhanced Onboarding Text Field
+// A new, styled component for this screen to make the form feel more modern
+struct OnboardingTextField: View {
+    let iconName: String
+    let placeholder: String
+    @Binding var text: String
+    var keyboardType: UIKeyboardType = .default
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: iconName)
+                .font(.title3)
+                .foregroundColor(Color.App.textSecondary)
+                .frame(width: 25)
+
+            TextField(placeholder, text: $text)
+                .keyboardType(keyboardType)
+                .tint(Color.App.accentGreen)
+                .foregroundColor(Color.App.textPrimary)
+        }
+        .padding()
+        .background(Color.App.card.opacity(0.7))
+        .cornerRadius(16)
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color.App.textSecondary.opacity(0.3), lineWidth: 1)
+        )
+    }
+}
+
+
+// MARK: - Preview
+struct FinancialAdvisorOnboardingView_Previews: PreviewProvider {
+    static var previews: some View {
+        FinancialAdvisorOnboardingView()
     }
 }

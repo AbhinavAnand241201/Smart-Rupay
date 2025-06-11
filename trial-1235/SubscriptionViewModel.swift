@@ -24,7 +24,7 @@ struct MembershipPlan: Identifiable, Hashable {
     var savings: String?
 }
 
-enum PaymentMethod: Identifiable {
+enum PaymentMethod: Identifiable , CaseIterable{
     case stripe, razorpay
     
     var id: String {

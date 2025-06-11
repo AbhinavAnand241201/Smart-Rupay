@@ -1,25 +1,17 @@
-
 import SwiftUI
 
 struct AdvancedFilterView: View {
+    // MARK: - Properties
     @Binding var currentFilters: TransactionFilterCriteria
     @Binding var isPresented: Bool
     
     @State private var editableFilters: TransactionFilterCriteria
-
+    
     let allCategories: [String] = [
         "Groceries", "Dining Out", "Transportation", "Entertainment", "Shopping",
         "Utilities", "Salary", "Freelance Income", "Dividends", "Rent", "Healthcare",
         "Education", "Gifts", "Other Income", "Other Expense"
     ].sorted()
-
-    
-    let screenBackgroundColor = Color(red: 0.08, green: 0.09, blue: 0.10)
-    let cardBackgroundColor = Color(red: 0.15, green: 0.16, blue: 0.18)
-    let mainTextColor = Color.white
-    let headerTextColor = Color(hex: "BEBEBE") // Brighter Gray for headers
-    let secondaryTextColor = Color(hex: "A0A0A0")
-    let accentColorTeal = Color(hex: "3AD7D5")
 
     init(currentFilters: Binding<TransactionFilterCriteria>, isPresented: Binding<Bool>) {
         self._currentFilters = currentFilters
@@ -27,198 +19,203 @@ struct AdvancedFilterView: View {
         self._editableFilters = State(initialValue: currentFilters.wrappedValue)
     }
 
+    // These helpers convert our optional Dates (Date?) into non-optional Dates (Date)
+        // that the DatePicker can use.
+        private var startDateBinding: Binding<Date> {
+            Binding(
+                get: { self.editableFilters.startDate ?? Date() },
+                set: { self.editableFilters.startDate = $0 }
+            )
+        }
+
+        private var endDateBinding: Binding<Date> {
+            Binding(
+                get: { self.editableFilters.endDate ?? Date() },
+                set: { self.editableFilters.endDate = $0 }
+            )
+        }
+    // MARK: - Body
     var body: some View {
         NavigationView {
-            ZStack {
-                screenBackgroundColor.ignoresSafeArea()
+            ZStack(alignment: .bottom) {
+                Color.App.background.ignoresSafeArea()
                 
-                Form {
-                    Section {
-                        TextField("Search (e.g., merchant, note ,pay)", text: $editableFilters.searchTerm)
-                            .listRowBackground(cardBackgroundColor)
-                            .foregroundColor(mainTextColor)
-                            .tint(accentColorTeal)
-                    } header: {
-                        Text("Search Keyword")
-                            .foregroundColor(headerTextColor) // Use updated header color
-                            .textCase(nil) // Prevent automatic uppercasing if it affects color
-                    }
-
-                    Section {
-                        DatePicker("Start Date",
-                                   selection: Binding(
-                                    get: { editableFilters.startDate ?? Date() },
-                                    set: { editableFilters.startDate = $0 }
-                                   ),
-                                   in: ...(editableFilters.endDate ?? Date()),
-                                   displayedComponents: .date
-                        )
-                        .accentColor(accentColorTeal)
-                        // .environment(\.colorScheme, .dark) // Form should inherit this
-
-                        DatePicker("End Date",
-                                   selection: Binding(
-                                    get: { editableFilters.endDate ?? Date() },
-                                    set: { editableFilters.endDate = $0 }
-                                   ),
-                                   in: (editableFilters.startDate ?? .distantPast)...Date(),
-                                   displayedComponents: .date
-                        )
-                        .accentColor(accentColorTeal)
-                        // .environment(\.colorScheme, .dark)
-
-                    } header: {
-                        Text("Date Range")
-                            .foregroundColor(headerTextColor) // Use updated header color
-                            .textCase(nil)
-                    }
-                    .listRowBackground(cardBackgroundColor)
-                    .foregroundColor(mainTextColor) // Applies to DatePicker labels
-                    .environment(\.colorScheme, .dark) // Ensure DatePicker text within row is light
-
-
-                    Section {
-                        Picker("Type", selection: $editableFilters.transactionType) {
-                            ForEach(TransactionTypeFilter.allCases) { type in
-                                Text(type.rawValue).tag(type)
+                ScrollView {
+                    VStack(spacing: 24) {
+                        // Each section is now a custom "card" with better styling and visibility
+                        FilterSectionCard(title: "Search Keyword") {
+                            TextField("Search (e.g., Starbucks, Amazon)", text: $editableFilters.searchTerm)
+                                .font(.system(size: 16))
+                                .padding(12)
+                                .background(Color.App.background.opacity(0.5)) // Darker background for contrast
+                                .cornerRadius(10)
+                                .tint(Color.App.accent)
+                                .foregroundColor(Color.App.textPrimary) // Ensure text is visible
+                        }
+                        
+                        FilterSectionCard(title: "Date Range") {
+                            DatePicker("Start Date", selection: startDateBinding, in: ...Date(), displayedComponents: .date)
+                                .foregroundColor(Color.App.textPrimary)
+                                .tint(Color.App.accent)
+                            
+                            Divider().background(Color.App.background)
+                            
+                            DatePicker("End Date", selection: endDateBinding, in: ...Date(), displayedComponents: .date)
+                                .foregroundColor(Color.App.textPrimary)
+                                .tint(Color.App.accent)
+                        }
+                        FilterSectionCard(title: "Transaction Type") {
+                            Picker("Type", selection: $editableFilters.transactionType) {
+                                ForEach(TransactionTypeFilter.allCases) { type in
+                                    Text(type.rawValue).tag(type)
+                                }
                             }
+                            .pickerStyle(SegmentedPickerStyle())
                         }
-                        .pickerStyle(SegmentedPickerStyle())
-                    } header: {
-                        Text("Transaction Type")
-                            .foregroundColor(headerTextColor) // Use updated header color
-                            .textCase(nil)
-                    }
-
-                    Section {
-                        MultiSelectPickerView(
-                            title: "Select Categories",
-                            allItems: allCategories,
-                            selectedItems: $editableFilters.selectedCategories
-                        )
-                    } header: {
-                        Text("Categories")
-                           .foregroundColor(headerTextColor) // Use updated header color
-                           .textCase(nil)
-                    }
-                   .listRowBackground(cardBackgroundColor)
-                    
-                    Section {
-                        HStack {
-                            TextField("Min Amount", text: $editableFilters.minAmount)
-                                .keyboardType(.decimalPad)
-                                .tint(accentColorTeal)
-                            Text("-").foregroundColor(secondaryTextColor) // Use secondary for the dash
-                            TextField("Max Amount", text: $editableFilters.maxAmount)
-                                .keyboardType(.decimalPad)
-                                .tint(accentColorTeal)
+                        
+                        FilterSectionCard(title: "Categories") {
+                            MultiSelectPickerView(
+                                allItems: allCategories,
+                                selectedItems: $editableFilters.selectedCategories
+                            )
                         }
-                    } header: {
-                        Text("Amount Range")
-                            .foregroundColor(headerTextColor) // Use updated header color
-                            .textCase(nil)
+                        
+                        // Add padding at the bottom to ensure content scrolls above the action buttons
+                        Color.clear.frame(height: 120)
                     }
-                    .listRowBackground(cardBackgroundColor)
-                    .foregroundColor(mainTextColor)
+                    .padding(.top, 20)
                 }
-                .scrollContentBackground(.hidden)
-                .environment(\.colorScheme, .dark) // Apply to Form to influence default styles
+                
+                // MARK: - Floating Action Buttons
+                actionButtons
             }
             .navigationTitle("Filters & Search")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Reset") {
-                        editableFilters = TransactionFilterCriteria()
-                    }
-                    .foregroundColor(accentColorTeal)
+                    Button("Reset") { editableFilters = TransactionFilterCriteria() }
+                        .tint(Color.App.accent)
                 }
-                // Explicitly set title color if still an issue
-                ToolbarItem(placement: .principal) {
-                     Text("Filters & Search")
-                         .font(.headline) // Or .system(size: 20, weight: .bold)
-                         .foregroundColor(mainTextColor)
-                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Apply") {
-                        currentFilters = editableFilters
-                        isPresented = false
-                    }
-                    .foregroundColor(accentColorTeal)
-                    .fontWeight(.bold)
+                    Button("Close") { isPresented = false }
+                        .tint(Color.App.accent)
                 }
             }
         }
-        .preferredColorScheme(.dark) // Apply to NavigationView
     }
-}
-
-struct MultiSelectPickerView: View {
-    let title: String
-    let allItems: [String]
-    @Binding var selectedItems: Set<String>
-    @State private var isExpanded: Bool = false
     
-    let mainTextColor = Color.white
-    let secondaryTextColor = Color(hex: "A0A0A0")
-    let accentColorTeal = Color(hex: "3AD7D5")
-    let itemBackgroundColor = Color(red: 0.20, green: 0.21, blue: 0.23)
-
-    var body: some View {
-        VStack(alignment: .leading) {
+    // MARK: - Action Buttons View
+    private var actionButtons: some View {
+        HStack(spacing: 15) {
             Button(action: {
-                withAnimation(.easeInOut(duration: 0.2)) { isExpanded.toggle() }
+                // This now resets the editable filters back to their original state
+                editableFilters = currentFilters
+            }) {
+                Text("Reset")
+                    .fontWeight(.semibold)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.App.card) // Use card color for secondary action
+                    .foregroundColor(Color.App.textPrimary)
+                    .cornerRadius(16)
+            }
+            
+            Button(action: {
+                currentFilters = editableFilters
+                isPresented = false
             }) {
                 HStack {
-                    Text(title)
-                        .foregroundColor(mainTextColor)
-                    Spacer()
-                    Text(selectedItems.isEmpty ? "All" : "\(selectedItems.count) selected")
-                        .foregroundColor(secondaryTextColor)
-                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                        .foregroundColor(secondaryTextColor)
+                    Image(systemName: "line.3.horizontal.decrease.circle.fill")
+                    Text("Apply Filters")
                 }
+                .fontWeight(.semibold)
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color.App.accent) // Bright, clear primary action
+                .foregroundColor(.black)
+                .cornerRadius(16)
+                .shadow(color: Color.App.accent.opacity(0.4), radius: 8, y: 4)
             }
-            .buttonStyle(.plain)
+        }
+        .padding(.horizontal)
+        .padding(.bottom, 10)
+        .padding(.top)
+        .background(.ultraThinMaterial)
+    }
+}
 
-            if isExpanded {
-                ScrollView(.vertical, showsIndicators: false) {
-                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
-                        ForEach(allItems, id: \.self) { item in
-                            Button(action: {
-                                if selectedItems.contains(item) {
-                                    selectedItems.remove(item)
-                                } else {
-                                    selectedItems.insert(item)
-                                }
-                            }) {
-                                Text(item)
-                                    .font(.system(size: 13))
-                                    .lineLimit(1)
-                                    .padding(.vertical, 10)
-                                    .padding(.horizontal, 5)
-                                    .frame(minWidth: 0, maxWidth: .infinity)
-                                    .background(selectedItems.contains(item) ? accentColorTeal : itemBackgroundColor)
-                                    .foregroundColor(selectedItems.contains(item) ? .black : mainTextColor)
-                                    .cornerRadius(8)
-                            }
-                            .buttonStyle(.plain)
+// MARK: - Custom Filter Section Card
+private struct FilterSectionCard<Content: View>: View {
+    let title: String
+    @ViewBuilder let content: Content
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 15) {
+            Text(title)
+                .font(.headline)
+                .foregroundColor(Color.App.textSecondary) // Use secondary text color for headers
+            
+            content
+        }
+        .padding()
+        .background(Color.App.card) // Use our standard card color
+        .cornerRadius(20)
+        .padding(.horizontal)
+    }
+}
+
+
+// MARK: - Enhanced Multi-Select Picker
+private struct MultiSelectPickerView: View {
+    let allItems: [String]
+    @Binding var selectedItems: Set<String>
+    
+    private let columns = [GridItem(.adaptive(minimum: 100, maximum: 120))]
+
+    var body: some View {
+        LazyVGrid(columns: columns, spacing: 12) {
+            ForEach(allItems, id: \.self) { item in
+                let isSelected = selectedItems.contains(item)
+                
+                Button(action: {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        if isSelected {
+                            selectedItems.remove(item)
+                        } else {
+                            selectedItems.insert(item)
                         }
                     }
+                }) {
+                    Text(item)
+                        .font(.system(size: 14, weight: .medium))
+                        .lineLimit(1)
+                        .foregroundColor(isSelected ? .black : Color.App.textPrimary)
+                        .padding(.vertical, 10)
+                        .frame(maxWidth: .infinity)
+                        .background(isSelected ? Color.App.accent : Color.App.background.opacity(0.5))
+                        .cornerRadius(12)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(isSelected ? Color.clear : Color.App.textSecondary.opacity(0.4), lineWidth: 1)
+                        )
                 }
-                .frame(maxHeight: 220)
-                .padding(.top, 5)
-                .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
     }
 }
 
+
+
+// MARK: - Preview
 struct AdvancedFilterView_Previews: PreviewProvider {
     static var previews: some View {
-        AdvancedFilterView(
-            currentFilters: .constant(TransactionFilterCriteria()),
-            isPresented: .constant(true)
-        )
+        // Example of how the filter view is presented
+        Text("Parent View")
+            .sheet(isPresented: .constant(true)) {
+                AdvancedFilterView(
+                    currentFilters: .constant(TransactionFilterCriteria()),
+                    isPresented: .constant(true)
+                )
+            }
     }
 }
