@@ -1,63 +1,102 @@
+// In file: LoginScreenView.swift
+
 import SwiftUI
 
 struct LoginScreenView: View {
-    // This state is managed by the App's root to switch views.
+    // MARK: - Properties
+    // All original state and logic are preserved
     @StateObject private var appState = AppState.shared
     
     @State private var email = ""
     @State private var password = ""
     @State private var isSignUpPresented = false
-
-    // MARK: - UI Colors
-    let screenBackgroundColor = Color(red: 0.08, green: 0.09, blue: 0.10)
-    let textFieldBackgroundColor = Color(red: 0.15, green: 0.16, blue: 0.18)
-    let placeholderTextColor = Color(hex: "A0A0A0")
-    let mainTextColor = Color.white
-    let accentColorTeal = Color(hex: "3AD7D5")
-    let secondaryButtonBackgroundColor = Color(red: 0.20, green: 0.21, blue: 0.23)
-    let linkTextColor = Color.white
-    let orTextColor = Color(hex: "A0A0A0")
-    let inputTextColor = Color.white
-
+    
+    // MARK: - Body
     var body: some View {
-        NavigationView { // Wrap in NavigationView to allow for the sheet presentation
+        NavigationView {
             ZStack {
-                screenBackgroundColor.ignoresSafeArea()
-
+                // A more dynamic and visually interesting background
+                LinearGradient(
+                    gradient: Gradient(colors: [Color.App.background, Color(hex: "#1C252E")]),
+                    startPoint: .top,
+                    endPoint: .bottom
+                ).ignoresSafeArea()
+                
+                // Adding a subtle shape for more visual flair
+                Circle()
+                    .fill(Color.App.accent.opacity(0.2))
+                    .blur(radius: 100)
+                    .offset(x: -150, y: -250)
+                
                 VStack(spacing: 20) {
                     Spacer()
-                    Text("Smart-Rupay")
-                        .font(.system(size: 32, weight: .bold, design: .rounded))
-                        .foregroundColor(mainTextColor)
-                        .padding(.bottom, 30)
+                    
+                    // MARK: - Header
+                    // Redesigned header with an icon for stronger branding
+                    VStack {
+                        Image(systemName: "indianrupeesign.circle.fill")
+                            .font(.system(size: 60))
+                            .foregroundStyle(
+                                .linearGradient(
+                                    colors: [Color.App.accent, .white],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .shadow(color: Color.App.accent.opacity(0.5), radius: 10)
+                        
+                        Text("Smart-Rupay")
+                            .font(.system(size: 32, weight: .bold, design: .rounded))
+                            .foregroundColor(Color.App.textPrimary)
+                    }
+                    .padding(.bottom, 40)
 
-                    CustomStyledTextField(
-                        placeholder: "Email",
-                        text: $email,
-                        keyboardType: .emailAddress
-                    )
-
-                    CustomStyledTextField(
-                        placeholder: "Password",
-                        text: $password,
-                        isSecure: true
-                    )
+                    // MARK: - Form Fields
+                    // Using a new, enhanced text field style for a premium feel
+                    VStack(spacing: 16) {
+                        AuthTextField(
+                            iconName: "envelope.fill",
+                            placeholder: "Email",
+                            text: $email,
+                            keyboardType: .emailAddress
+                        )
+                        AuthTextField(
+                            iconName: "lock.fill",
+                            placeholder: "Password",
+                            text: $password,
+                            isSecure: true
+                        )
+                    }
                     
                     // MARK: - Log In Button
+                    // A more visually impactful primary button
                     Button(action: {
-                        // In a real app, you would verify email and password here.
-                        // FIXED: This now correctly tells the rest of the app to proceed.
                         appState.isLoggedIn = true
                     }) {
                         Text("Log In")
-                            .font(.system(size: 18, weight: .semibold))
+                            .font(.headline.bold())
                             .foregroundColor(.black)
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 15)
-                            .background(accentColorTeal)
-                            .cornerRadius(12)
+                            .padding()
+                            .background(Color.App.accent)
+                            .cornerRadius(16)
+                            .shadow(color: Color.App.accent.opacity(0.4), radius: 10, y: 5)
                     }
-                    .padding(.top, 10)
+                    .padding(.top, 20)
+
+                    // MARK: - Alternative Logins
+                    // A common modern pattern that enhances user experience
+                    HStack {
+                        VStack { Divider().background(Color.App.textSecondary.opacity(0.5)) }
+                        Text("OR").foregroundColor(Color.App.textSecondary)
+                        VStack { Divider().background(Color.App.textSecondary.opacity(0.5)) }
+                    }
+                    .padding(.vertical, 15)
+                    
+                    HStack(spacing: 20) {
+                        SocialLoginButton(iconName: "g.circle.fill", color: .red) { /* Google Login Action */ }
+                        SocialLoginButton(iconName: "apple.logo", color: .white) { /* Apple Login Action */ }
+                    }
 
                     Spacer()
                     Spacer()
@@ -65,64 +104,26 @@ struct LoginScreenView: View {
                     // MARK: - Sign Up Link
                     HStack(spacing: 4) {
                         Text("Don't have an account?")
-                            .font(.system(size: 14))
-                            .foregroundColor(placeholderTextColor)
+                            .foregroundColor(Color.App.textSecondary)
                         Button("Sign Up") {
                             isSignUpPresented = true
                         }
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(linkTextColor)
+                        .fontWeight(.bold)
+                        .foregroundColor(Color.App.accent)
                     }
                 }
-                .padding(.horizontal, 25)
+                .padding(.horizontal, 30)
             }
             .navigationBarHidden(true)
             .sheet(isPresented: $isSignUpPresented) {
-                // This would present the SignUpScreenView you provided
-                // SignUpScreenView()
+                // SignUpScreenView() // This will present your sign-up screen
             }
         }
     }
 }
 
-// FIXED: This reusable component is now defined once and correctly used.
-struct CustomStyledTextField: View {
-    let placeholder: String
-    @Binding var text: String
-    var keyboardType: UIKeyboardType = .default
-    var isSecure: Bool = false
-
-    let backgroundColor: Color = Color(red: 0.15, green: 0.16, blue: 0.18)
-    let placeholderColor: Color = Color(hex: "A0A0A0")
-    let textColor: Color = Color.white
-
-    var body: some View {
-        Group {
-            if isSecure {
-                SecureField("", text: $text, prompt: Text(placeholder).foregroundColor(placeholderColor))
-            } else {
-                TextField("", text: $text, prompt: Text(placeholder).foregroundColor(placeholderColor))
-            }
-        }
-        .font(.system(size: 16, design: .rounded))
-        .keyboardType(keyboardType)
-        .autocapitalization(.none)
-        .disableAutocorrection(true)
-        .foregroundColor(textColor)
-        .padding(EdgeInsets(top: 16, leading: 18, bottom: 16, trailing: 18))
-        .background(backgroundColor)
-        .cornerRadius(12)
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.gray.opacity(0.2), lineWidth: 0.5)
-        )
-    }
-}
-
-
-
-// MARK: - Preview (Login Screen)
-struct LoginScreenView_Previews_Themed: PreviewProvider {
+// MARK: - Preview
+struct LoginScreenView_Previews: PreviewProvider {
     static var previews: some View {
         LoginScreenView()
     }

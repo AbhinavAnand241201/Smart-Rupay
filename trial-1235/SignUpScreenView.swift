@@ -1,149 +1,103 @@
+// In file: SignUpScreenView.swift
+
 import SwiftUI
 
 struct SignUpScreenView: View {
+    // MARK: - Properties
     @State private var fullName = ""
     @State private var email = ""
     @State private var password = ""
     @State private var confirmPassword = ""
-
-    let screenBackgroundColor = Color(red: 0.08, green: 0.09, blue: 0.10)
-    let mainTextColor = Color.white
-    let accentColorTeal = Color(hex: "3AD7D5")
-    let secondaryButtonBackgroundColor = Color(red: 0.20, green: 0.21, blue: 0.23)
-    let linkTextColor = Color.white
-    let orTextColor = Color(hex: "A0A0A0")
     
     @Environment(\.presentationMode) var presentationMode
 
+    // MARK: - Body
     var body: some View {
         ZStack {
-            screenBackgroundColor.ignoresSafeArea()
+            // Consistent dynamic background from the Login screen
+            LinearGradient(
+                gradient: Gradient(colors: [Color.App.background, Color(hex: "#1C252E")]),
+                startPoint: .top,
+                endPoint: .bottom
+            ).ignoresSafeArea()
+            
+            Circle()
+                .fill(Color.App.accentGreen.opacity(0.2))
+                .blur(radius: 100)
+                .offset(x: 150, y: -250)
 
             VStack(spacing: 0) {
+                // Custom navigation bar for a seamless look
                 HStack {
-                    Button(action: {
-                        presentationMode.wrappedValue.dismiss()
-                    }) {
-                        Image(systemName: "arrow.left")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(mainTextColor)
+                    Button(action: { presentationMode.wrappedValue.dismiss() }) {
+                        Image(systemName: "chevron.left")
+                            .font(.title3.weight(.medium))
+                            .foregroundColor(Color.App.textSecondary)
                     }
                     Spacer()
-                    Text("Create Account")
-                        .font(.system(size: 20, weight: .bold))
-                        .foregroundColor(mainTextColor)
-                    Spacer()
-                    Image(systemName: "questionmark.circle.fill")
-                        .font(.system(size: 22))
-                        .foregroundColor(mainTextColor)
-                        .opacity(0)
                 }
-                .padding(.horizontal)
-                .padding(.top, 15)
-                .padding(.bottom, 20)
-
-                ScrollView {
+                .padding()
+                
+                ScrollView(showsIndicators: false) {
                     VStack(spacing: 20) {
-                        Text("Join Smart-Rupay")
-                            .font(.system(size: 28, weight: .bold))
-                            .foregroundColor(mainTextColor)
-                            .multilineTextAlignment(.center)
-                            .padding(.top, 15)
-                            .padding(.bottom, 25)
-
-                        CustomStyledTextField(
-                            placeholder: "Full Name",
-                            text: $fullName
-                        )
-
-                        CustomStyledTextField(
-                            placeholder: "Email",
-                            text: $email,
-                            keyboardType: .emailAddress
-                        )
-
-                        CustomStyledTextField(
-                            placeholder: "Password",
-                            text: $password,
-                            isSecure: true
-                        )
-
-                        CustomStyledTextField(
-                            placeholder: "Confirm Password",
-                            text: $confirmPassword,
-                            isSecure: true
-                        )
-
-                        Button(action: {
-                            print("Sign Up tapped with Email: \(email), FullName: \(fullName)")
-                        }) {
-                            Text("Sign Up")
-                                .font(.system(size: 18, weight: .semibold))
-                                .foregroundColor(.black)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 15)
-                                .background(accentColorTeal)
-                                .cornerRadius(12)
+                        
+                        // MARK: - Header
+                        VStack {
+                            Text("Create Your Account")
+                                .font(.system(size: 32, weight: .bold, design: .rounded))
+                                .foregroundColor(Color.App.textPrimary)
+                            
+                            Text("Join Smart-Rupay to take control of your finances.")
+                                .font(.subheadline)
+                                .foregroundColor(Color.App.textSecondary)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 20)
                         }
-                        .padding(.top, 10)
+                        .padding(.bottom, 30)
 
-                        Text("Or")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(orTextColor)
-                            .padding(.vertical, 15)
-
-                        Button(action: {
-                            print("Sign up with Google tapped")
-                        }) {
-                            HStack(spacing: 10) {
-                                Image(systemName: "g.circle.fill")
-                                    .font(.system(size: 20))
-                                Text("Sign up with Google")
-                                    .font(.system(size: 16, weight: .medium))
-                            }
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 15)
-                            .background(secondaryButtonBackgroundColor)
-                            .cornerRadius(12)
+                        // MARK: - Form Fields
+                        VStack(spacing: 16) {
+                            // Reusing the same enhanced text field style from the Login screen
+                            AuthTextField(iconName: "person.fill", placeholder: "Full Name", text: $fullName)
+                            AuthTextField(iconName: "envelope.fill", placeholder: "Email", text: $email, keyboardType: .emailAddress)
+                            AuthTextField(iconName: "lock.fill", placeholder: "Password", text: $password, isSecure: true)
+                            AuthTextField(iconName: "lock.fill", placeholder: "Confirm Password", text: $confirmPassword, isSecure: true)
                         }
                         
-                        Spacer(minLength: 20)
-                    }
-                    .padding(.horizontal, 25)
-                }
-                
-                Spacer()
+                        // MARK: - Sign Up Button
+                        Button(action: {
+                            print("Sign Up tapped with Email: \(email), FullName: \(fullName)")
+                            // Your registration logic would go here
+                        }) {
+                            Text("Create Account")
+                                .font(.headline.bold())
+                                .foregroundColor(.black)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.App.accent)
+                                .cornerRadius(16)
+                                .shadow(color: Color.App.accent.opacity(0.4), radius: 10, y: 5)
+                        }
+                        .padding(.top, 20)
 
-                HStack(spacing: 4) {
-                    Text("Already have an account?")
-                        .font(.system(size: 14))
-                        .foregroundColor(orTextColor)
-                    Button(action: {
-                        presentationMode.wrappedValue.dismiss()
-                    }) {
-                        Text("Log In")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundColor(linkTextColor)
+                        // MARK: - Alternative Logins
+                        HStack {
+                            VStack { Divider().background(Color.App.textSecondary.opacity(0.5)) }
+                            Text("OR").foregroundColor(Color.App.textSecondary)
+                            VStack { Divider().background(Color.App.textSecondary.opacity(0.5)) }
+                        }
+                        .padding(.vertical, 15)
+                        
+                        HStack(spacing: 20) {
+                            SocialLoginButton(iconName: "g.circle.fill", color: .red) { /* Google Sign Up Action */ }
+                            SocialLoginButton(iconName: "apple.logo", color: .white) { /* Apple Sign Up Action */ }
+                        }
                     }
+                    .padding(.horizontal, 30)
                 }
-                .padding(.bottom, (UIApplication.shared.connectedScenes
-                                     .compactMap { $0 as? UIWindowScene }
-                                     .first?.windows.first?.safeAreaInsets.bottom ?? 0) + 15)
-                .padding(.top, 10)
             }
-        }
-        .onTapGesture {
-            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
         }
         .navigationBarHidden(true)
     }
 }
 
-struct SignUpScreenView_Previews_Themed: PreviewProvider {
-    static var previews: some View {
-        NavigationView {
-            SignUpScreenView()
-        }
-    }
-}

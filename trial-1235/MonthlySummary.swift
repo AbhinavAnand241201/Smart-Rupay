@@ -1,7 +1,10 @@
-import SwiftUI
-import Charts // Ensure Charts is imported
-//trying to resolve some issues here , will do it tmr.
+// In the file containing SpendingAnalysisScreenView
 
+import SwiftUI
+import Charts
+
+// MARK: - Data Models
+// Models are kept here for self-containment, but could be moved to a shared file.
 struct MonthlySummary: Identifiable {
     let id = UUID()
     let month: String
@@ -9,12 +12,19 @@ struct MonthlySummary: Identifiable {
     let expenses: Double
     var netSavings: Double { income - expenses }
 }
+// In MonthlySummary.swift, replace the old CategorySpending struct with this one
 
-struct CategorySpending: Identifiable {
+struct CategorySpending: Identifiable, Equatable, Hashable  {
     let id = UUID()
     let categoryName: String
     var spentAmount: Double
     let color: Color
+
+    // This function tells Swift to use the 'id' for Hashing,
+    // which is all that's needed to make the struct Plottable.
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
 }
 
 struct BudgetPerformance: Identifiable {
@@ -24,7 +34,7 @@ struct BudgetPerformance: Identifiable {
     var spentAmount: Double
     let color: Color
     var overBudget: Bool { spentAmount > budgetedAmount }
-    var progress: Double { budgetedAmount > 0 ? min(spentAmount / budgetedAmount, 1.2) : 0 }
+    var progress: Double { budgetedAmount > 0 ? min(spentAmount / budgetedAmount, 1.0) : 0 }
 }
 
 enum AnalysisPeriod: String, CaseIterable, Identifiable {
@@ -34,214 +44,261 @@ enum AnalysisPeriod: String, CaseIterable, Identifiable {
     var id: String { self.rawValue }
 }
 
+
+// MARK: - Main View
 struct SpendingAnalysisScreenView: View {
     @State private var selectedPeriod: AnalysisPeriod = .currentMonth
-
-    let screenBackgroundColor = Color(red: 0.08, green: 0.09, blue: 0.10)
-    let cardBackgroundColor = Color(red: 0.15, green: 0.16, blue: 0.18)
-    let mainTextColor = Color.white
-    let secondaryTextColor = Color(hex: "A0A0A0")
-    let accentColorTeal = Color(hex: "3AD7D5")
-
-    let categoryColors = [
-        Color(hex: "FF3399"), Color.orange, Color(hex: "39FF14"),
-        Color(hex: "007BFF"), Color(hex: "FFD700"), Color(hex: "BF00FF"),
-        Color(hex: "FF4500")
-    ]
+    @State private var selectedCategory: CategorySpending?
     
-    // MARK: - Sample Data
-    @State private var monthlySummaryData: [MonthlySummary] = [
-        MonthlySummary(month: "Current", income: 5200, expenses: 3150)
+    // MARK: - Rich Mock Data
+    private let monthlySummaryData: [MonthlySummary] = [
+        .init(month: "Current", income: 120000, expenses: 75000)
     ]
 
-    @State private var categorySpendingData: [CategorySpending] = [
-        CategorySpending(categoryName: "Groceries", spentAmount: 800, color: Color(hex: "FF3399")),
-        CategorySpending(categoryName: "Dining Out", spentAmount: 650, color: Color.orange),
-        CategorySpending(categoryName: "Transport", spentAmount: 300, color: Color(hex: "39FF14")),
-        CategorySpending(categoryName: "Entertainment", spentAmount: 450, color: Color(hex: "007BFF")),
-        CategorySpending(categoryName: "Shopping", spentAmount: 500, color: Color(hex: "FFD700")),
-        CategorySpending(categoryName: "Utilities", spentAmount: 350, color: Color(hex: "BF00FF")),
-        CategorySpending(categoryName: "Other", spentAmount: 100, color: Color(hex: "FF4500"))
+    private let categorySpendingData: [CategorySpending] = [
+        .init(categoryName: "Shopping", spentAmount: 18000, color: Color.App.accentPink),
+        .init(categoryName: "Dining Out", spentAmount: 12500, color: Color.App.accentOrange),
+        .init(categoryName: "Groceries", spentAmount: 22000, color: Color.App.accentGreen),
+        .init(categoryName: "Transport", spentAmount: 8500, color: Color.App.accentPurple),
+        .init(categoryName: "Utilities", spentAmount: 14000, color: Color.App.accentBlue)
     ]
 
-    @State private var budgetPerformanceData: [BudgetPerformance] = [
-        BudgetPerformance(categoryName: "Groceries", budgetedAmount: 700, spentAmount: 800, color: Color(hex: "FF3399")),
-        BudgetPerformance(categoryName: "Dining Out", budgetedAmount: 500, spentAmount: 650, color: Color.orange),
-        BudgetPerformance(categoryName: "Entertainment", budgetedAmount: 400, spentAmount: 450, color: Color(hex: "007BFF"))
+    private let budgetPerformanceData: [BudgetPerformance] = [
+        .init(categoryName: "Groceries", budgetedAmount: 20000, spentAmount: 22000, color: Color.App.accentGreen),
+        .init(categoryName: "Dining Out", budgetedAmount: 15000, spentAmount: 12500, color: Color.App.accentOrange),
+        .init(categoryName: "Shopping", budgetedAmount: 25000, spentAmount: 18000, color: Color.App.accentPink)
     ]
-
-    @Environment(\.presentationMode) var presentationMode
 
     var body: some View {
-        ZStack {
-            screenBackgroundColor.ignoresSafeArea()
-
-            VStack(spacing: 0) {
-                // MARK: - Top Navigation Bar
-                HStack {
-                    Button(action: { presentationMode.wrappedValue.dismiss() }) {
-                        Image(systemName: "arrow.left")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(mainTextColor)
-                    }
-                    Spacer()
-                    Text("Spending Analysis")
-                        .font(.system(size: 20, weight: .bold))
-                        .foregroundColor(mainTextColor)
-                    Spacer()
-                    Image(systemName: "arrow.left").opacity(0)
-                }
-                .padding(.horizontal)
-                .padding(.top, 15)
-                .padding(.bottom, 15)
-
-                // MARK: - Period Selector
-                Picker("Select Period", selection: $selectedPeriod) {
-                    ForEach(AnalysisPeriod.allCases) { period in
-                        Text(period.rawValue).tag(period)
-                    }
-                }
-                .pickerStyle(SegmentedPickerStyle())
-                .padding(.horizontal)
-                .padding(.bottom, 20)
-
+        NavigationView {
+            ZStack {
+                Color.App.background.ignoresSafeArea()
+                
                 ScrollView {
-                    VStack(spacing: 25) {
-                        AnalysisCardView(title: "Income vs Expenses") {
-                            if let currentSummary = monthlySummaryData.first {
-                                Chart {
-                                    BarMark(x: .value("Category", "Income"), y: .value("Amount", currentSummary.income))
-                                        .foregroundStyle(accentColorTeal)
-                                        .cornerRadius(6)
-                                    BarMark(x: .value("Category", "Expenses"), y: .value("Amount", currentSummary.expenses))
-                                        .foregroundStyle(categoryColors[1]) // Orange for expenses
-                                        .cornerRadius(6)
-                                }
-                                .chartYAxis {
-                                    AxisMarks(preset: .automatic, position: .leading) { value in
-                                        AxisGridLine().foregroundStyle(secondaryTextColor.opacity(0.3))
-                                        AxisTick().foregroundStyle(secondaryTextColor.opacity(0.5))
-                                        AxisValueLabel().foregroundStyle(secondaryTextColor)
-                                    }
-                                }
-                                .chartXAxis {
-                                    AxisMarks(preset: .automatic) { value in
-                                        AxisGridLine().foregroundStyle(secondaryTextColor.opacity(0.3))
-                                        AxisTick().foregroundStyle(secondaryTextColor.opacity(0.5))
-                                        AxisValueLabel().foregroundStyle(secondaryTextColor)
-                                    }
-                                }
-                                .frame(height: 200)
-                                .accessibilityLabel("Bar chart showing income of \(currentSummary.income, specifier: "%.0f") and expenses of \(currentSummary.expenses, specifier: "%.0f")")
-                                
-                                HStack {
-                                    Spacer()
-                                    VStack(alignment: .trailing) {
-                                        Text("Net Savings")
-                                            .font(.caption)
-                                            .foregroundColor(secondaryTextColor)
-                                        Text(String(format: "$%.2f", currentSummary.netSavings))
-                                            .font(.title3.bold())
-                                            .foregroundColor(currentSummary.netSavings >= 0 ? accentColorTeal : categoryColors[6])
-                                    }
-                                }
-                                .padding(.top, 5)
-                            }
-                        }
-
-                        AnalysisCardView(title: "Spending by Category") {
-                            HStack(spacing: 15) {
-                                Chart(categorySpendingData) { data in
-                                    SectorMark(
-                                        angle: .value("Amount", data.spentAmount),
-                                        innerRadius: .ratio(0.6),
-                                        angularInset: 1.5
-                                    )
-                                    .foregroundStyle(data.color)
-                                    .cornerRadius(5)
-                                    .accessibilityLabel("\(data.categoryName): \(data.spentAmount, specifier: "%.0f") dollars")
-                                }
-                                .frame(width: 150, height: 150)
-                                
-                                ScrollView(.vertical, showsIndicators: false) {
-                                    VStack(alignment: .leading, spacing: 6) {
-                                        ForEach(categorySpendingData) { data in
-                                            HStack {
-                                                Circle().fill(data.color).frame(width: 10, height: 10)
-                                                Text(data.categoryName)
-                                                    .font(.caption)
-                                                    .foregroundColor(mainTextColor)
-                                                Spacer()
-                                                Text(String(format: "$%.0f", data.spentAmount))
-                                                    .font(.caption.weight(.medium))
-                                                    .foregroundColor(secondaryTextColor)
-                                            }
-                                        }
-                                    }
-                                }
-                                .frame(height: 150)
-                            }
-                        }
-
-                        // MARK: - Budget vs Actual Spending
-                        AnalysisCardView(title: "Budget Performance") {
-                            VStack(spacing: 15) {
-                                ForEach(budgetPerformanceData) { budgetItem in
-                                    VStack(alignment: .leading, spacing: 5) {
-                                        HStack {
-                                            Text(budgetItem.categoryName)
-                                                .font(.subheadline.weight(.medium))
-                                                .foregroundColor(mainTextColor)
-                                            Spacer()
-                                            Text(String(format: "$%.0f / $%.0f", budgetItem.spentAmount, budgetItem.budgetedAmount))
-                                                .font(.caption)
-                                                .foregroundColor(budgetItem.overBudget ? categoryColors[6] : secondaryTextColor)
-                                        }
-                                        ProgressView(value: budgetItem.progress)
-                                            .progressViewStyle(LinearProgressViewStyle(tint: budgetItem.overBudget ? categoryColors[6] : budgetItem.color))
-                                            .scaleEffect(x: 1, y: 2.5, anchor: .center)
-                                            .clipShape(Capsule())
-                                    }
-                                }
-                            }
-                        }
-                        Spacer(minLength: 20)
+                    VStack(spacing: 24) {
+                        // Using our modern custom segmented control
+                        AnalysisPeriodPicker(selection: $selectedPeriod)
+                        
+                        // Each analysis section is a redesigned card
+                        IncomeVsExpenseCard(summary: monthlySummaryData.first!)
+                        
+                        SpendingByCategoryCard(
+                            spendingData: categorySpendingData,
+                            selectedCategory: $selectedCategory
+                        )
+                        
+                        BudgetPerformanceCard(performanceData: budgetPerformanceData)
                     }
                     .padding(.vertical)
                 }
             }
+            .navigationTitle("Spending Analysis")
+            .navigationBarTitleDisplayMode(.inline)
         }
-        .navigationBarHidden(true)
     }
 }
 
+// MARK: - Analysis Card Subviews
+
+private struct IncomeVsExpenseCard: View {
+    let summary: MonthlySummary
+    
+    var body: some View {
+        AnalysisCardView(title: "Income vs. Expenses") {
+            Chart {
+                BarMark(
+                    x: .value("Category", "Income"),
+                    y: .value("Amount", summary.income)
+                )
+                .foregroundStyle(Color.App.accentGreen.gradient)
+                .cornerRadius(8)
+                
+                BarMark(
+                    x: .value("Category", "Expenses"),
+                    y: .value("Amount", summary.expenses)
+                )
+                .foregroundStyle(Color.App.accentPink.gradient)
+                .cornerRadius(8)
+            }
+            .chartYAxis {
+                AxisMarks(preset: .automatic, position: .leading) {
+                    AxisGridLine().foregroundStyle(Color.App.textSecondary.opacity(0.2))
+                    AxisValueLabel().foregroundStyle(Color.App.textSecondary)
+                }
+            }
+            .chartXAxis {
+                AxisMarks() {
+                    AxisValueLabel().foregroundStyle(Color.App.textSecondary)
+                }
+            }
+            .frame(height: 200)
+            
+            HStack {
+                Spacer()
+                VStack(alignment: .trailing) {
+                    Text("Net Savings")
+                        .font(.headline)
+                        .foregroundColor(Color.App.textSecondary)
+                    Text("₹\(Int(summary.netSavings))")
+                        .font(.title.bold())
+                        .foregroundColor(summary.netSavings >= 0 ? .App.accentGreen : .App.accentPink)
+                }
+            }
+            .padding(.top, 8)
+        }
+    }
+}
+
+private struct SpendingByCategoryCard: View {
+    let spendingData: [CategorySpending]
+    @Binding var selectedCategory: CategorySpending?
+    
+    var totalSpending: Double {
+        spendingData.reduce(0) { $0 + $1.spentAmount }
+    }
+    
+    var body: some View {
+        AnalysisCardView(title: "Spending by Category") {
+            Chart(spendingData) { data in
+                SectorMark(
+                    angle: .value("Amount", data.spentAmount),
+                    innerRadius: .ratio(0.65),
+                    angularInset: 1.5
+                )
+                .foregroundStyle(data.color.gradient)
+                .cornerRadius(5)
+                .opacity(selectedCategory == nil ? 1.0 : (selectedCategory == data ? 1.0 : 0.5))
+            }
+            .chartAngleSelection(value: $selectedCategory)
+            .frame(height: 200)
+            .chartOverlay { _ in
+                VStack {
+                    Text(selectedCategory?.categoryName ?? "Total Spent")
+                        .font(.headline)
+                        .foregroundColor(Color.App.textSecondary)
+                    Text("₹\(Int(selectedCategory?.spentAmount ?? totalSpending))")
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .foregroundColor(selectedCategory?.color ?? .App.textPrimary)
+                }
+            }
+            .padding(.bottom)
+
+            VStack(spacing: 12) {
+                ForEach(spendingData) { data in
+                    HStack {
+                        Circle().fill(data.color).frame(width: 12, height: 12)
+                        Text(data.categoryName).foregroundColor(Color.App.textPrimary)
+                        Spacer()
+                        Text("₹\(Int(data.spentAmount))")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundColor(Color.App.textSecondary)
+                    }
+                }
+            }
+        }
+    }
+}
+
+private struct BudgetPerformanceCard: View {
+    let performanceData: [BudgetPerformance]
+    
+    var body: some View {
+        AnalysisCardView(title: "Budget Performance") {
+            VStack(spacing: 16) {
+                ForEach(performanceData) { budget in
+                    VStack(alignment: .leading, spacing: 5) {
+                        HStack {
+                            Text(budget.categoryName)
+                                .font(.headline)
+                                .foregroundColor(Color.App.textPrimary)
+                            Spacer()
+                            Text("₹\(Int(budget.spentAmount)) / ₹\(Int(budget.budgetedAmount))")
+                                .font(.subheadline.weight(.medium))
+                                .foregroundColor(budget.overBudget ? Color.App.accentPink : Color.App.textSecondary)
+                        }
+                        ProgressView(value: budget.progress)
+                            .progressViewStyle(LinearProgressViewStyle(tint: budget.overBudget ? Color.App.accentPink : budget.color))
+                            .scaleEffect(x: 1, y: 2.5, anchor: .center)
+                            .clipShape(Capsule())
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+// MARK: - Reusable Helper Views
+
+// A generic card container to keep styling consistent
 struct AnalysisCardView<Content: View>: View {
     let title: String
     @ViewBuilder let content: Content
-    
-    let cardBackgroundColor = Color(red: 0.15, green: 0.16, blue: 0.18)
-    let mainTextColor = Color.white
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 16) {
             Text(title)
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundColor(mainTextColor)
-                .padding(.bottom, 4)
+                .font(.title2.bold())
+                .foregroundColor(Color.App.textPrimary)
             
             content
         }
-        .padding()
-        .background(cardBackgroundColor)
-        .cornerRadius(12)
+        .padding(20)
+        .background(Color.App.card)
+        .cornerRadius(20)
         .padding(.horizontal)
     }
 }
 
+
+
+// Add this new view to the bottom of your MonthlySummary.swift file
+
+struct AnalysisPeriodPicker: View {
+    @Binding var selection: AnalysisPeriod
+    @Namespace private var namespace
+    
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(AnalysisPeriod.allCases) { period in
+                Button(action: {
+                    withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                        selection = period
+                    }
+                }) {
+                    Text(period.rawValue)
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background {
+                            if selection == period {
+                                RoundedRectangle(cornerRadius: 16)
+                                    .fill(Color.App.card)
+                                    .matchedGeometryEffect(id: "selection", in: namespace)
+                                    .shadow(radius: 3)
+                            }
+                        }
+                        .foregroundColor(selection == period ? Color.App.textPrimary : Color.App.textSecondary)
+                }
+            }
+        }
+        .padding(6)
+        .background(Color.App.background)
+        .cornerRadius(20)
+        .overlay(
+            RoundedRectangle(cornerRadius: 20)
+                .stroke(Color.App.card, lineWidth: 2)
+        )
+        .padding(.horizontal)
+    }
+}
+
+
+// MARK: - Preview
 struct SpendingAnalysisScreenView_Previews: PreviewProvider {
     static var previews: some View {
-        NavigationView {
-            SpendingAnalysisScreenView()
-        }
+        SpendingAnalysisScreenView()
+            .preferredColorScheme(.dark)
     }
 }
