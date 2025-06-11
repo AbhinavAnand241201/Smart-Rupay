@@ -23,7 +23,13 @@ struct TransactionDetailView: View {
                 .padding(.top, 20)
             }
         }
-        .navigationTitle("Transaction Details")
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                Text("Transaction Details")
+                    .fontWeight(.bold) // You can use .bold, .semibold, or .heavy
+                    .foregroundColor(.white)
+            }
+        }
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
@@ -99,7 +105,7 @@ private struct DetailRow: View {
                 .foregroundColor(.App.textSecondary)
             Spacer()
             Text(value)
-                .font(.headline.weight(.medium))
+                .font(.headline.weight(.heavy))
                 .foregroundColor(valueColor)
         }
         .padding()

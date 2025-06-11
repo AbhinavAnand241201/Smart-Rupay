@@ -43,7 +43,13 @@ struct ProfileSettingsScreenView: View {
                 }
                 .padding(.vertical)
             }
-            .navigationTitle("Profile & Account")
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text("Profile & Account")
+                        .fontWeight(.bold) // You can use .bold, .semibold, or .heavy
+                        .foregroundColor(.white)
+                }
+            }
         }
     }
 }

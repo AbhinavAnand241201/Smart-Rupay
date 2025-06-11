@@ -101,3 +101,10 @@ struct SignUpScreenView: View {
     }
 }
 
+
+// MARK: - Preview
+struct SignUpScreenView_Previews: PreviewProvider {
+    static var previews: some View {
+        SignUpScreenView()
+    }
+}

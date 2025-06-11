@@ -49,7 +49,15 @@ struct SettingsScreenView: View {
                     .padding(.vertical)
                 }
             }
-            .navigationTitle("Settings")
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text("Settings")
+                        .font(.system(size: 35 ))
+                        .fontWeight(.heavy) // You can use .bold, .semibold, or .heavy
+                        .foregroundColor(.white)
+                }
+            }
+            
         }
     }
 }
