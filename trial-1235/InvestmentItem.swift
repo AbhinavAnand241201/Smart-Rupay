@@ -109,12 +109,9 @@ struct PillSegmentedControl: View {
     @Binding var selection: InvestmentSegment
     @Namespace private var namespace
     
-    // In InvestmentsScreenView.swift, inside struct PillSegmentedControl
-
     var body: some View {
         HStack(spacing: 0) {
-            // This now correctly uses the generic type 'T' instead of being hardcoded
-            ForEach(T.allCases, id: \.id) { segment in
+            ForEach(InvestmentSegment.allCases) { segment in
                 Button(action: {
                     withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                         selection = segment

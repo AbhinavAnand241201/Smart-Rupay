@@ -1,62 +1,67 @@
+// In file: PremiumSubscriptionView.swift
+
 import SwiftUI
 
 struct PremiumSubscriptionView: View {
-    // Use @StateObject to create and own the ViewModel instance.
     @StateObject private var viewModel = SubscriptionViewModel()
     @Environment(\.dismiss) var dismiss
     @State private var contentHasAppeared: Bool = false
-    // In PremiumSubscriptionView.swift, replace the body property
-    
+
     var body: some View {
-        NavigationView { // <-- ADD THIS
-            ZStack {
-                Color(hex: "1C1D21").ignoresSafeArea()
+        // The view is already wrapped in a NavigationView from our previous fix
+        ZStack {
+            // A more dynamic and premium background
+            RadialGradient(
+                gradient: Gradient(colors: [Color.App.accentPurple.opacity(0.3), Color.App.background]),
+                center: .top,
+                startRadius: 5,
+                endRadius: 800
+            ).ignoresSafeArea()
+            
+            Color.App.background.ignoresSafeArea()
+            
+            VStack(spacing: 0) {
+                HeaderActions(dismissAction: { dismiss() })
                 
-                VStack(spacing: 0) {
-                    // Header with the close button
-                    HeaderActions(dismissAction: { dismiss() })
-                    
-                    // All other content in a ScrollView
-                    ScrollView(.vertical, showsIndicators: false) {
-                        VStack(spacing: 30) {
-                            HeaderTextView()
-                            FeaturesListView(features: viewModel.premiumFeatures)
-                            PlanSelectionView(viewModel: viewModel)
-                        }
-                        .padding()
+                ScrollView(.vertical, showsIndicators: false) {
+                    VStack(spacing: 40) { // Increased spacing for a more premium feel
+                        HeaderTextView()
+                        FeaturesListView(features: viewModel.premiumFeatures)
+                        PlanSelectionView(viewModel: viewModel)
                     }
-                    
-                    Spacer()
-                    
-                    // The button at the very bottom
-                    SubscribeButton(viewModel: viewModel)
-                }
-                .foregroundColor(.white)
-                .opacity(contentHasAppeared ? 1 : 0)
-                .onAppear {
-                    withAnimation(.easeIn(duration: 0.5)) {
-                        contentHasAppeared = true
-                    }
+                    .padding()
+                    .padding(.bottom, 120) // Ensure space for the floating button
                 }
             }
-            .navigationBarHidden(true) // <-- ADD THIS
-            .preferredColorScheme(.dark)
+            .overlay(alignment: .bottom) {
+                SubscribeButton(viewModel: viewModel)
+            }
         }
-        .accentColor(Color(hex: "3AD7D5")) // <-- ADD THIS to color the navigation back button
+        .navigationBarHidden(true)
+        .preferredColorScheme(.dark)
+        .opacity(contentHasAppeared ? 1 : 0)
+        .onAppear {
+            withAnimation(.easeIn(duration: 0.5)) {
+                contentHasAppeared = true
+            }
+        }
     }
 }
-// MARK: - Helper Subviews (Corrected)
+
+// MARK: - Redesigned Helper Subviews
 
 private struct HeaderActions: View {
     var dismissAction: () -> Void
-    
     var body: some View {
         HStack {
             Spacer()
             Button(action: dismissAction) {
-                Image(systemName: "xmark.circle.fill")
-                    .font(.title)
-                    .foregroundColor(.gray.opacity(0.8))
+                Image(systemName: "xmark")
+                    .font(.body.weight(.bold))
+                    .foregroundColor(Color.App.textSecondary)
+                    .padding(8)
+                    .background(Color.App.card.opacity(0.5))
+                    .clipShape(Circle())
             }
         }
         .padding([.horizontal, .top])
@@ -65,14 +70,26 @@ private struct HeaderActions: View {
 
 private struct HeaderTextView: View {
     var body: some View {
-        VStack(spacing: 8) {
-            Text("Unlock premium features")
-                .font(.largeTitle.bold())
-                .multilineTextAlignment(.center)
+        VStack(spacing: 16) {
+            // A prominent icon to convey "premium"
+            Image(systemName: "crown.fill")
+                .font(.system(size: 40))
+                .foregroundStyle(
+                    .linearGradient(
+                        colors: [Color(hex: "#FFD700"), Color.App.accentOrange],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .shadow(color: Color.App.accentOrange.opacity(0.5), radius: 10)
             
-            Text("Get access to advanced tools and insights to maximize your financial potential.")
-                .font(.subheadline)
-                .foregroundColor(.gray)
+            Text("Unlock Premium")
+                .font(.largeTitle.bold())
+                .foregroundColor(Color.App.textPrimary)
+            
+            Text("Get unlimited access to our most powerful features and insights.")
+                .font(.headline)
+                .foregroundColor(Color.App.textSecondary)
                 .multilineTextAlignment(.center)
         }
     }
@@ -80,18 +97,24 @@ private struct HeaderTextView: View {
 
 private struct FeaturesListView: View {
     let features: [PlanFeature]
+    // A palette of colors for the feature icons
+    private let iconColors: [Color] = [.App.accent, .App.accentGreen, .App.accentBlue, .App.accentPurple]
     
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            ForEach(features) { feature in
-                HStack(spacing: 15) {
-                    Image(systemName: feature.iconName)
-                        .font(.title2)
-                        .foregroundColor(Color(hex: "3AD7D5"))
-                        .frame(width: 30)
-                    Text(feature.text)
+            ForEach(features.indices, id: \.self) { index in
+                HStack(spacing: 16) {
+                    Image(systemName: features[index].iconName)
+                        .font(.headline.weight(.bold))
+                        .foregroundColor(iconColors[index % iconColors.count])
+                        .frame(width: 36, height: 36)
+                        .background(iconColors[index % iconColors.count].opacity(0.15))
+                        .clipShape(Circle())
+                    
+                    Text(features[index].text)
                         .font(.headline)
                         .fontWeight(.medium)
+                        .foregroundColor(Color.App.textPrimary)
                 }
             }
         }
@@ -99,25 +122,18 @@ private struct FeaturesListView: View {
 }
 
 private struct PlanSelectionView: View {
-    // Use @ObservedObject to observe an existing ViewModel instance.
     @ObservedObject var viewModel: SubscriptionViewModel
-    
     var body: some View {
-        VStack(spacing: 15) {
-            Text("Choose your plan")
-                .font(.title3).bold()
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-            // This ForEach will now work correctly.
+        VStack(spacing: 16) {
             ForEach(viewModel.plans) { plan in
                 PlanSelectionRow(
                     plan: plan,
-                    // These properties now exist on the viewModel
                     isSelected: viewModel.selectedPlanId == plan.id
                 )
                 .onTapGesture {
-                    // This method now exists on the viewModel
-                    viewModel.selectPlan(planId: plan.id)
+                    withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                        viewModel.selectPlan(planId: plan.id)
+                    }
                 }
             }
         }
@@ -130,24 +146,32 @@ private struct PlanSelectionRow: View {
 
     var body: some View {
         HStack {
-            VStack(alignment: .leading) {
-                Text(plan.name).font(.headline)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(plan.name)
+                    .font(.title3.bold())
                 Text("₹\(Int(plan.price)) / \(plan.pricePeriod.split(separator: " ").last ?? "")")
-                    .font(.subheadline).foregroundColor(.gray)
+                    .font(.subheadline)
+                    .foregroundColor(Color.App.textSecondary)
             }
             Spacer()
-            ZStack {
-                Circle().stroke(isSelected ? Color(hex: "3AD7D5") : Color.gray, lineWidth: 2)
-                if isSelected {
-                    Circle().fill(Color(hex: "3AD7D5")).frame(width: 14, height: 14).transition(.scale)
-                }
-            }.frame(width: 24, height: 24)
+            if let savings = plan.savings {
+                Text(savings)
+                    .font(.caption.bold())
+                    .foregroundColor(.black)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(Color.App.accentGreen)
+                    .clipShape(Capsule())
+            }
         }
-        .padding()
-        .background(Color.white.opacity(0.05))
-        .cornerRadius(12)
-        .overlay(RoundedRectangle(cornerRadius: 12).stroke(isSelected ? Color(hex: "3AD7D5") : Color.clear, lineWidth: 1.5))
-        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isSelected)
+        .padding(20)
+        .background(Color.App.card)
+        .cornerRadius(20)
+        .overlay(
+            RoundedRectangle(cornerRadius: 20)
+                .stroke(isSelected ? Color.App.accent : Color.clear, lineWidth: 2.5)
+        )
+        .shadow(color: .black.opacity(0.2), radius: isSelected ? 10 : 0)
     }
 }
 
@@ -156,34 +180,36 @@ private struct SubscribeButton: View {
     
     var body: some View {
         VStack {
-            Button(action: {
-                // This guard will now work as expected.
-                guard let planId = viewModel.selectedPlanId else { return }
-                Task {
-                    await viewModel.processSubscription(planId: planId)
+            NavigationLink(
+                destination: {
+                    if let plan = viewModel.selectedPlan {
+                        CheckoutView(plan: plan)
+                            .environmentObject(viewModel)
+                    }
+                },
+                label: {
+                    Text("Continue")
+                        .font(.headline.bold())
+                        .foregroundColor(.black)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.App.accent)
+                        .cornerRadius(16)
+                        .shadow(color: Color.App.accent.opacity(0.4), radius: 10, y: 5)
                 }
-            }) {
-                if viewModel.isLoading {
-                    ProgressView().progressViewStyle(.circular).tint(.black)
-                } else {
-                    Text("Subscribe").font(.headline.bold()).foregroundColor(.black)
-                }
-            }
-            .frame(maxWidth: .infinity)
-            .frame(height: 55)
-            .background(Color(hex: "3AD7D5"))
-            .cornerRadius(12)
-            .disabled(viewModel.isLoading || viewModel.selectedPlanId == nil)
-            .opacity(viewModel.selectedPlanId == nil ? 0.7 : 1.0)
+            )
+            .disabled(viewModel.selectedPlanId == nil)
+            .opacity(viewModel.selectedPlanId == nil ? 0.6 : 1.0)
         }
-        .padding()
+        .padding(.horizontal, 30)
+        .padding(.top)
+        .padding(.bottom, 20)
     }
 }
 
-// Preview
+// MARK: - Preview
 struct PremiumSubscriptionView_Previews: PreviewProvider {
     static var previews: some View {
         PremiumSubscriptionView()
     }
 }
-

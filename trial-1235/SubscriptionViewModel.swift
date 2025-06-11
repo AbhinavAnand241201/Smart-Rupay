@@ -78,21 +78,22 @@ class SubscriptionViewModel: ObservableObject {
         }
     }
     
-    // In SubscriptionViewModel.swift, replace the existing fetchData function with this one.
-
-        func fetchData() {
-            self.premiumFeatures = [
-                .init(text: "Advanced Analytics", iconName: "chart.bar.xaxis"),
-                .init(text: "Market Trend Insights", iconName: "arrow.up.right.dots"),
-                .init(text: "Real-time Alerts", iconName: "bell.badge.fill"),
-                .init(text: "Priority Support", iconName: "person.3.fill")
-            ]
-            
-            self.plans = [
-                .init(id: "monthly_pro", name: "Monthly Pro", price: 499, pricePeriod: "per month", features: [], highlight: false),
-                .init(id: "annual_pro", name: "Annual Pro", price: 3999, pricePeriod: "per year", features: [], highlight: true, savings: "Save 20%")
-            ]
-        }
+    
+    func fetchData() {
+        // This mock data now correctly initializes PlanFeature without the 'id' argument
+        self.premiumFeatures = [
+            .init(text: "AI Financial Planner Access", iconName: "brain.head.profile"),
+            .init(text: "Advanced Spending Analysis", iconName: "chart.pie.fill"),
+            .init(text: "Debt Payoff Projections", iconName: "calendar.badge.clock"),
+            .init(text: "Priority Customer Support", iconName: "person.3.fill")
+        ]
+        
+        // The 'plans' data is correct and remains the same
+        self.plans = [
+            .init(id: "monthly_pro", name: "Monthly Pro", price: 499, pricePeriod: "per month", features: [], highlight: false, savings: nil),
+            .init(id: "annual_pro", name: "Annual Pro", price: 3999, pricePeriod: "per year", features: [], highlight: true, savings: "Save 25%")
+        ]
+    }
     
     func processSubscription(planId: String) async -> Bool {
         isLoading = true
