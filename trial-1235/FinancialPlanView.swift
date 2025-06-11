@@ -1,68 +1,104 @@
-
+// In file: FinancialPlanView.swift
 
 import SwiftUI
 import Charts
 
+// MARK: - Main View
 struct FinancialPlanView: View {
     let plan: FinancialPlan
     let onDismiss: () -> Void
 
-    // UI Colors
-    let screenBackgroundColor = Color(red: 0.08, green: 0.09, blue: 0.10)
-    let cardBackgroundColor = Color(red: 0.15, green: 0.16, blue: 0.18)
-    let mainTextColor = Color.white
-    let secondaryTextColor = Color(hex: "A0A0A0")
-    
     var body: some View {
         ZStack {
-            screenBackgroundColor.ignoresSafeArea()
+            // A more dynamic and radiant background, giving this screen its own identity
+            RadialGradient(
+                gradient: Gradient(colors: [Color.App.accentBlue.opacity(0.3), Color.App.background]),
+                center: .top,
+                startRadius: 5,
+                endRadius: 900
+            ).ignoresSafeArea()
+            
+            Color.App.background.ignoresSafeArea()
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 30) {
                     
-                    // MARK: - Header
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Your Financial Blueprint")
-                            .font(.largeTitle).bold()
-                            .foregroundColor(mainTextColor)
-                        Text("An educational guide based on established financial principles.")
-                            .foregroundColor(secondaryTextColor)
-                    }
-                    .padding([.horizontal, .top])
-
-                    // MARK: - Budget Allocation Plan
+                    header
+                    
                     BudgetPlanCard(plan: plan.budgetAllocationPlan)
-
-                    // MARK: - Emergency Fund Plan
-                    PlanSectionCard(plan: plan.emergencyFundPlan, accentColor: .blue)
                     
-                    // MARK: - Long-Term Goal Suggestion
-                    PlanSectionCard(plan: plan.longTermGoalSuggestion, accentColor: .green)
+                    PlanSectionCard(plan: plan.emergencyFundPlan, accentColor: Color.App.accentOrange)
+                        
+                    PlanSectionCard(plan: plan.longTermGoalSuggestion, accentColor: Color.App.accentGreen)
+                        
+                    disclaimer
                     
-                    // MARK: - Disclaimer
-                    Text("Important: This is an AI-generated educational plan, not professional financial advice. Always consult with a certified financial advisor for personal guidance.")
-                        .font(.caption)
-                        .foregroundColor(secondaryTextColor)
-                        .padding()
-                        .frame(maxWidth: .infinity, alignment: .center)
-                        .background(cardBackgroundColor)
-                        .cornerRadius(10)
-                        .padding()
+                    Color.clear.frame(height: 20)
                 }
+                .padding(.top, 20)
             }
         }
         .overlay(alignment: .topTrailing) {
-            Button(action: onDismiss) {
-                Image(systemName: "xmark.circle.fill")
-                    .font(.title)
-                    .foregroundColor(.gray)
-            }
-            .padding()
+            dismissButton
         }
+    }
+    
+    // MARK: - Helper Views
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: "doc.text.magnifyingglass")
+                    .font(.system(size: 32, weight: .bold))
+                    .foregroundStyle(
+                        .linearGradient(
+                            colors: [Color.App.accent, Color.App.accentBlue],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                Spacer()
+            }
+            
+            Text("Your Financial Blueprint")
+                .font(.largeTitle).bold()
+                .foregroundColor(Color.App.textPrimary)
+            
+            Text("An educational guide based on established financial principles.")
+                .foregroundColor(Color.App.textSecondary)
+        }
+        .padding(.horizontal)
+    }
+    
+    private var dismissButton: some View {
+        Button(action: onDismiss) {
+            Image(systemName: "xmark.circle.fill")
+                .font(.title)
+                .symbolRenderingMode(.palette)
+                .foregroundStyle(Color.black, Color.App.textSecondary.opacity(0.8))
+        }
+        .padding()
+    }
+    
+    private var disclaimer: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: "info.circle.fill")
+                .font(.title3)
+                .foregroundColor(Color.App.textSecondary)
+            
+            Text("Important: This is an AI-generated educational plan, not professional financial advice. Always consult with a certified financial advisor for personal guidance.")
+                .font(.caption)
+                .foregroundColor(Color.App.textSecondary)
+                .lineSpacing(3)
+        }
+        .padding()
+        .background(Color.App.card.opacity(0.5))
+        .cornerRadius(16)
+        .padding(.horizontal)
     }
 }
 
 
+// MARK: - Plan Section Card (For Emergency Fund, Goals, etc.)
 struct PlanSectionCard: View {
     let plan: PlanSection
     let accentColor: Color
@@ -71,38 +107,41 @@ struct PlanSectionCard: View {
         VStack(alignment: .leading, spacing: 15) {
             HStack(spacing: 12) {
                 Image(systemName: plan.iconName)
-                    .font(.title2)
+                    .font(.title2.weight(.semibold))
                     .foregroundColor(accentColor)
                 Text(plan.title)
                     .font(.title2).bold()
-                    .foregroundColor(.white)
+                    .foregroundColor(Color.App.textPrimary)
             }
             
             Text(plan.summary)
                 .font(.subheadline)
-                .foregroundColor(Color(hex: "A0A0A0"))
+                .foregroundColor(Color.App.textSecondary)
                 .lineSpacing(4)
             
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 12) {
                 ForEach(plan.steps, id: \.self) { step in
-                    HStack {
+                    HStack(alignment: .top) {
                         Image(systemName: "checkmark.circle.fill")
                             .foregroundColor(accentColor)
-                        Text(step)
+                            .padding(.top, 4) // Align checkmark with first line of text
+                        Text(try! AttributedString(markdown: step)) // Allows for **bold** text
                             .font(.subheadline)
-                            .foregroundColor(.white)
+                            .foregroundColor(Color.App.textPrimary)
                     }
                 }
             }
             .padding(.top, 5)
         }
         .padding()
-        .background(Color(red: 0.15, green: 0.16, blue: 0.18))
-        .cornerRadius(12)
+        .background(Color.App.card)
+        .cornerRadius(20)
         .padding(.horizontal)
     }
 }
 
+
+// MARK: - Budget Plan Card (With Chart)
 struct BudgetPlanCard: View {
     let plan: BudgetPlanSection
     
@@ -110,86 +149,95 @@ struct BudgetPlanCard: View {
         VStack(alignment: .leading, spacing: 15) {
             HStack(spacing: 12) {
                 Image(systemName: plan.iconName)
-                    .font(.title2)
-                    .foregroundColor(.purple)
+                    .font(.title2.weight(.semibold))
+                    .foregroundColor(Color.App.accentPurple)
                 Text(plan.title)
                     .font(.title2).bold()
-                    .foregroundColor(.white)
+                    .foregroundColor(Color.App.textPrimary)
             }
             
             Text(plan.summary)
                 .font(.subheadline)
-                .foregroundColor(Color(hex: "A0A0A0"))
+                .foregroundColor(Color.App.textSecondary)
                 .lineSpacing(4)
 
             Chart(plan.allocations) { allocation in
                 BarMark(
                     x: .value("Amount", allocation.amount),
-                    y: .value("Category", allocation.category)
+                    y: .value("Category", "") // Hide Y-axis labels for a cleaner look
                 )
                 .foregroundStyle(allocation.color)
-                .annotation(position: .overlay, alignment: .center) {
-                    Text(String(format: "%.0f%%", allocation.percentage * 100))
+                .cornerRadius(8) // Modern rounded bars
+                .annotation(position: .overlay, alignment: .leading, spacing: 8) {
+                    Text(allocation.category)
                         .font(.caption.bold())
-                        .foregroundColor(.black)
+                        .foregroundColor(.white)
+                        .shadow(radius: 2)
                 }
             }
-            .chartXAxis(.hidden)
-            .frame(height: 120)
-            .padding(.top)
+            .chartLegend(.hidden) // Hide the legend
+            .chartYAxis(.hidden)
+            .chartXAxis {
+                AxisMarks(preset: .automatic, values: .automatic(desiredCount: 5)) { value in
+                    AxisGridLine(stroke: StrokeStyle(dash: [2, 3]))
+                        .foregroundStyle(Color.App.textSecondary.opacity(0.3))
+                    AxisValueLabel()
+                        .foregroundStyle(Color.App.textSecondary)
+                }
+            }
+            .frame(height: 150)
+            .padding(.top, 5)
         }
         .padding()
-        .background(Color(red: 0.15, green: 0.16, blue: 0.18))
-        .cornerRadius(12)
+        .background(Color.App.card)
+        .cornerRadius(20)
         .padding(.horizontal)
     }
 }
 
 
+// MARK: - Preview
+struct FinancialPlanView_Previews: PreviewProvider {
+    static var previews: some View {
+        let sampleBudgetPlan = BudgetPlanSection(
+            title: "Budget Allocation",
+            iconName: "chart.pie.fill",
+            summary: "The 50/30/20 rule is a popular framework for managing money. It divides your after-tax income into three categories.",
+            allocations: [
+                .init(category: "Needs", percentage: 0.5, amount: 50000, colorHex: "#0A84FF"),
+                .init(category: "Wants", percentage: 0.3, amount: 30000, colorHex: "#AF52DE"),
+                .init(category: "Savings", percentage: 0.2, amount: 20000, colorHex: "#30D158")
+            ]
+        )
 
+        let sampleEmergencyPlan = PlanSection(
+            title: "Emergency Fund",
+            iconName: "shield.lefthalf.filled",
+            summary: "This is a safety net for unexpected events. A common goal is to have 3-6 months of expenses saved.",
+            steps: [
+                "Your 3-month target is **₹90,000.00**.",
+                "Open a separate High-Yield Savings Account for this.",
+                "Automate a portion of your savings to this fund."
+            ]
+        )
+        
+        let sampleGoalPlan = PlanSection(
+            title: "Long-Term Goals",
+            iconName: "flag.checkered",
+            summary: "Your savings from the 50/30/20 plan can be used to invest towards your long-term goals like 'buying a new car'.",
+            steps: [
+                "Define a target amount and timeline for your goal.",
+                "Research low-cost, diversified investment options.",
+                "Consider setting up automated investments (SIPs)."
+            ]
+        )
 
-#Preview {
-    let sampleBudgetPlan = BudgetPlanSection(
-        title: "Budget Allocation",
-        iconName: "chart.pie.fill",
-        summary: "The 50/30/20 rule is a popular framework for managing money. It divides your after-tax income into three categories.",
-      
-        allocations: [
-            .init(category: "Needs", percentage: 0.5, amount: 2500, colorHex: "#007AFF"),      
-            .init(category: "Wants", percentage: 0.3, amount: 1500, colorHex: "#FF9500"),    
-            .init(category: "Savings", percentage: 0.2, amount: 1000, colorHex: "#34C759")      
-        ]
-    )
+        let samplePlan = FinancialPlan(
+            emergencyFundPlan: sampleEmergencyPlan,
+            budgetAllocationPlan: sampleBudgetPlan,
+            longTermGoalSuggestion: sampleGoalPlan
+        )
 
-    let sampleEmergencyPlan = PlanSection(
-        title: "Emergency Fund",
-        iconName: "shield.lefthalf.filled",
-        summary: "This is a safety net for unexpected events. A common goal is to have 3-6 months of expenses saved.",
-        steps: [
-            "Your 3-month target is ₹90,000.00.",
-            "Open a separate High-Yield Savings Account for this.",
-            "Automate a portion of your savings to this fund."
-        ]
-    )
-    
-    let sampleGoalPlan = PlanSection(
-        title: "Long-Term Goals",
-        iconName: "flag.fill",
-        summary: "Your savings from the 50/30/20 plan can be used to invest towards your long-term goals like 'buying a new car'.",
-        steps: [
-            "Define a target amount and timeline for your goal.",
-            "Research low-cost, diversified investment options.",
-            "Consider setting up automated investments (SIPs)."
-        ]
-    )
-
-    let samplePlan = FinancialPlan(
-        emergencyFundPlan: sampleEmergencyPlan,
-        budgetAllocationPlan: sampleBudgetPlan,
-        longTermGoalSuggestion: sampleGoalPlan
-    )
-
-    FinancialPlanView(plan: samplePlan, onDismiss: {
-        print("Preview dismiss tapped.")
-    })
+        FinancialPlanView(plan: samplePlan, onDismiss: {})
+    }
 }

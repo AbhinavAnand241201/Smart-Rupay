@@ -9,18 +9,31 @@ class FinancialGoalsViewModel: ObservableObject {
 
     init() {}
     
+    // In FinancialGoalsViewModel.swift, replace the fetchGoals function
 
     func fetchGoals() async {
-        isLoading = true
-        errorMessage = nil
+        // For the demo, we will load rich mock data instead of calling the network.
+        // In your final app, you would remove this and use your NetworkService.
         
-        do {
-            self.goals = try await NetworkService.shared.fetchGoals()
-        } catch {
-            self.errorMessage = "Error fetching goals: \(error.localizedDescription)"
-        }
+        // Using our app's predefined accent colors for variety
+        let accentColors = [
+            Color.App.accentGreen.toHex() ?? "30D158",
+            Color.App.accentBlue.toHex() ?? "0A84FF",
+            Color.App.accentPurple.toHex() ?? "AF52DE",
+            Color.App.accentOrange.toHex() ?? "FF9F0A",
+            Color.App.accentPink.toHex() ?? "FF2D55"
+        ]
         
-        isLoading = false
+        // A diverse set of goals to showcase the UI
+        self.goals = [
+            FinancialGoal(name: "Buy New MacBook Pro", targetAmount: 250000, currentAmount: 185000, deadline: Calendar.current.date(byAdding: .month, value: 3, to: Date()), iconName: "laptopcomputer", colorHex: accentColors[1]),
+            FinancialGoal(name: "Vacation to Europe", targetAmount: 400000, currentAmount: 150000, deadline: Calendar.current.date(byAdding: .year, value: 1, to: Date()), iconName: "airplane", colorHex: accentColors[2]),
+            FinancialGoal(name: "Emergency Fund", targetAmount: 100000, currentAmount: 100000, deadline: nil, iconName: "shield.lefthalf.filled", colorHex: accentColors[0]), // Completed
+            FinancialGoal(name: "Down Payment for Car", targetAmount: 300000, currentAmount: 80000, deadline: nil, iconName: "car.fill", colorHex: accentColors[3])
+        ]
+        
+        self.isLoading = false
+        self.errorMessage = nil
     }
 
     func addGoal(name: String, targetAmount: Double, currentAmount: Double, deadline: Date?) async {
