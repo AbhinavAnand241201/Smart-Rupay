@@ -169,8 +169,7 @@ struct FinancialAdvisorOnboardingView: View {
     }
 }
 
-// MARK: - Enhanced Onboarding Text Field
-// A new, styled component for this screen to make the form feel more modern
+// make the form feel more modern
 struct OnboardingTextField: View {
     let iconName: String
     let placeholder: String
@@ -184,10 +183,18 @@ struct OnboardingTextField: View {
                 .foregroundColor(Color.App.textSecondary)
                 .frame(width: 25)
 
-            TextField(placeholder, text: $text)
-                .keyboardType(keyboardType)
-                .tint(Color.App.accentGreen)
-                .foregroundColor(Color.App.textPrimary)
+            // --- MODIFICATION START ---
+            // Replaced the simple placeholder string with a styled prompt
+            TextField("", text: $text, prompt: Text(placeholder)
+                .foregroundColor(.white)
+                .bold()
+            )
+            // You can also add a specific font size like this:
+            // .prompt: Text(placeholder).font(.system(size: 16)).foregroundColor(.white).bold()
+            // --- MODIFICATION END ---
+            .keyboardType(keyboardType)
+            .tint(Color.App.accentGreen)
+            .foregroundColor(Color.App.textPrimary) // This is for the user's input text
         }
         .padding()
         .background(Color.App.card.opacity(0.7))
