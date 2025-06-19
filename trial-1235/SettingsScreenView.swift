@@ -9,8 +9,8 @@ struct SettingsScreenView: View {
     
     // Using a sample user profile for the demo
     private let user = UserProfile(
-        fullName: "Ethan Carter",
-        email: "ethan.carter@example.com",
+        fullName: "Abhinav Anand",
+        email: "iabhinavanand10@gmail.com",
         phoneNumber: "+91 98765 43210",
         profileImageName: "ab1"
     )

@@ -35,3 +35,24 @@ struct DebtItem: Identifiable, Codable, Hashable {
         }
     }
 }
+
+
+
+//namespace is created DebtItem.Debttype
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
